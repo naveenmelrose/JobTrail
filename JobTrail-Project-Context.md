@@ -1,13 +1,13 @@
 # JobTrail — Project Context
 
 > Single source of truth. Read this first in any new chat.
-> Last updated: May 11, 2026
+> Last updated: May 11, 2026 — added Primary tab scan filter, on-open re-scan model, and Buy Me a Coffee monetization decision.
 
 ---
 
 ## 1. What this project is
 
-A Chrome extension that auto-detects job applications from Gmail and tracks them on a Kanban dashboard. Built as a **learning project**, not a business. Income target dropped — $0 revenue acceptable. If unexpected traction emerges, monetization can be revisited.
+A Chrome extension that auto-detects job applications from Gmail and tracks them on a Kanban dashboard. Built as a **learning project**, not a business. Free forever. Optional "Buy Me a Coffee" link in settings for users who want to support. No paywall, no premium tier.
 
 **Name:** JobTrail (previously called InboxTrax — the v2 deck still uses old name pending feedback)
 **Domain available:** jobtrail.net (not purchased yet, not a blocker)
@@ -27,6 +27,7 @@ A Chrome extension that auto-detects job applications from Gmail and tracks them
 - **Manual entry** for jobs that don't send confirmation emails
 - **CSV export**
 - **Ghosted detection** (30 days no reply, hardcoded in v1)
+- **Buy Me a Coffee** link in settings (optional support, no paywall)
 
 ### The 6 stages
 1. Applied
@@ -67,6 +68,7 @@ A Chrome extension that auto-detects job applications from Gmail and tracks them
 
 ### Detection logic
 - **Hybrid classification:** ATS domain whitelist (Greenhouse, Lever, Ashby, Workday, etc.) auto-accepts; non-whitelist domains → LLM checks
+- **Gmail Primary tab only** on initial and re-scans. Skip Promotions/Social/Updates/Forums. Disclosed to user in onboarding + settings.
 - **What counts as Applied:** ATS confirmation emails only. Skip cold outreach, vague LinkedIn alerts, job digests.
 - **What counts as Rejected:** Explicit "moving forward with other candidates" language
 - **What counts as Interview Scheduled:** Explicit calendar invite only
@@ -76,6 +78,7 @@ A Chrome extension that auto-detects job applications from Gmail and tracks them
 - **Default window:** Last 30 days on first install
 - **Cap:** Max 500 emails on initial scan (covers 99% of users)
 - **First-run experience:** Pre-filled dashboard (sells the magic)
+- **Re-scan trigger:** On-open only. Extension checks Gmail for new emails when user opens the dashboard. No background polling, no scheduled scans.
 
 ---
 

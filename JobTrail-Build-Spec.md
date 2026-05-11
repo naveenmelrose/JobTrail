@@ -2,7 +2,7 @@
 
 > Technical build specification. Companion to `JobTrail-Project-Context.md`.
 > Context doc = *what* and *why*. This doc = *how*.
-> Last updated: May 11, 2026 — Gemini rate limits verified, OAuth client deferred to week 1.
+> Last updated: May 11, 2026 — added Primary tab filter, on-open re-scan trigger, Buy Me a Coffee link in settings.
 
 ---
 
@@ -42,6 +42,9 @@ JobTrail is a Chrome extension (Manifest V3) that:
 - Calendar integration: phase 1B (weeks 9–12), not phase 1A
 - License: MIT, open source
 - Stack: JavaScript + Chrome Manifest V3 + React + Tailwind
+- Gmail Primary tab only on all scans (initial + re-scan)
+- Re-scan trigger: on-open only, no background polling
+- Free forever, optional Buy Me a Coffee link in settings (no paywall, no premium tier)
 
 ---
 
@@ -376,7 +379,7 @@ The mockup is the visual spec. Component breakdown (Claude Code can refine):
 | `KanbanColumn` | One column |
 | `JobCard` | One card |
 | `JobModal` | The drill-in modal |
-| `SettingsDrawer` | The right-side settings panel |
+| `SettingsDrawer` | The right-side settings panel (includes "Support JobTrail" link to Buy Me a Coffee at bottom) |
 | `SearchBar` | Top search input |
 | `SummaryBar` | The pills row (Total / Active / This week) |
 
@@ -391,15 +394,20 @@ The mockup is the visual spec. Component breakdown (Claude Code can refine):
 ### Initial scan (first install)
 1. After OAuth + API key entry, trigger scan.
 2. Fetch up to 500 emails from the last 30 days using Gmail search query:
-   `newer_than:30d -in:chats`
+   `newer_than:30d -in:chats category:primary`
 3. Filter by sender domain against ATS whitelist → fast batch.
 4. Non-whitelist emails → batch through Gemini with rate-limit awareness.
 5. Build initial `jobs` array, store, render dashboard.
 
-### Re-scan (manual button in dashboard)
-- Same as initial but only fetches emails newer than `meta.lastScanAt`.
+**Note on Primary tab filter:** `category:primary` skips Promotions, Social, Updates, and Forums tabs. Cuts noise (job digests, marketing) and reduces LLM call volume. Disclosed to user in onboarding + settings. If a user has tabs disabled, everything is treated as Primary — filter is harmless. Rare edge case: a legitimate ATS confirmation routed by Gmail to Updates would be missed. Accepted tradeoff in v1.
+
+### Re-scan (manual button in dashboard + on-open)
+- **On-open:** Every time the user opens the JobTrail dashboard, automatically check Gmail for new emails since `meta.lastScanAt`.
+- **Manual button:** Same logic, triggered by the refresh icon in the header.
+- Same Gmail query as initial scan, with `after:` timestamp instead of `newer_than:30d`.
 - Updates existing jobs if `threadId` matches.
 - Adds new jobs for new threads.
+- Expected duration: 5–15 seconds for typical inbox activity.
 
 ### Background scan
 **[OUT OF SCOPE for v1]** Auto-scan on a schedule. v1 is manual re-scan only.

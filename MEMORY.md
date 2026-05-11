@@ -137,6 +137,101 @@
 
 ---
 
+## May 11, 2026 — Gmail Primary tab only on all scans
+
+**What was decided:** Initial and re-scans query Gmail with `category:primary` filter. Skip Promotions, Social, Updates, and Forums tabs entirely.
+
+**Why:**
+- Job-related emails (ATS confirmations, recruiter replies, interview invites) almost always land in Primary
+- LinkedIn job alerts, Indeed digests, marketing emails land in Updates/Promotions — already on the "don't classify as Applied" list
+- Cuts LLM call volume meaningfully without sacrificing recall on legitimate emails
+- Users with tabs disabled: everything is Primary, filter is harmless
+- Disclosed to user in onboarding + settings (transparency principle)
+
+**What was rejected:**
+- Option 2: Primary + Updates — safer but adds back noise from job digests we already skip
+- Option 3: No tab filter, rely on whitelist + LLM — wastes LLM quota on emails we'd reject anyway
+
+**Risk accepted:** A legit ATS confirmation occasionally misrouted by Gmail to Updates would be missed. Rare. Acceptable in v1.
+
+---
+
+## May 11, 2026 — Re-scan trigger model: on-open only
+
+**What was decided:** Extension scans Gmail for new emails only when user opens the dashboard. No background polling, no scheduled scans, no real-time push.
+
+**Why:**
+- Matches "no backend" locked architecture
+- Matches "simplicity wherever possible" principle
+- API calls happen only when user is actively looking — predictable quota usage
+- Job hunting isn't real-time; users check applications a few times a day at most
+- 5–15 second delay on open is acceptable and expected
+- User confirmed the delay is reasonable
+
+**What was rejected:**
+- Manual-only refresh — feels dated, dashboard goes stale
+- Background polling via Chrome alarms — uses LLM quota when user isn't looking, more battery/network use, more complex
+- Gmail Pub/Sub push notifications — would require a backend, breaks locked architecture
+- Hybrid (on-open + light background check) — adds complexity for marginal gain; revisit in v2 if users ask
+
+**Note:** Phase 1B calendar sync (Interview Scheduled → Awaiting Outcome auto-transition) is time-based, not email-based — separate question, handle when 1B work starts.
+
+---
+
+## May 11, 2026 — Monetization: free forever + optional Buy Me a Coffee
+
+**What was decided:** JobTrail is free forever. No paywall, no premium tier, no usage limits behind payment. A small "Buy Me a Coffee" link at the bottom of the settings drawer for users who want to support voluntarily. Platform: Buy Me a Coffee (matches warm/direct brand tone).
+
+**Why:**
+- Aligns with locked principle "learning over revenue"
+- Aligns with locked principle "no marketing pressure"
+- MIT license + paywall is messy (forks could remove paywall legally)
+- Adding payments = real product business (Stripe, support, refunds, tax complexity) — conflicts with learning project framing
+- Zero infrastructure: BMaC + Stripe handle everything
+- Doesn't compromise privacy story
+- Honest signal — people who genuinely value the tool can say thanks; everyone else never sees it
+
+**Placement rules:**
+- Settings drawer only, at the bottom
+- No mention during onboarding
+- No banner on dashboard
+- No nag screens or "consider supporting" popups
+- Single line copy: "JobTrail is free and open source. If it saved you time, you can buy me a coffee." ☕
+
+**What was rejected:**
+- $5 one-time pay-to-continue after threshold — high churn risk at exact moment user has done the hard work; bait-and-switch feel; MIT license conflict; payment infra overhead before knowing if anyone retains
+- Freemium with paid tier — biggest betrayal of "simple, private, yours" story
+- Pay upfront — kills 95% of installs before value is shown
+- No support option at all — leaves no avenue for genuine fans to contribute
+- GitHub Sponsors — fits open source vibe but requires supporter to have a GitHub account (more friction)
+- Ko-fi — similar to BMaC, slightly more creator-focused; BMaC won on brand-tone match
+
+**Revisit trigger:** Only if usage genuinely grows and donation pattern emerges. Not before. Even then, the existing decision stands unless real data justifies a change.
+
+---
+
+## May 11, 2026 — Ireland tax handling for Buy Me a Coffee (informational)
+
+**What was decided:** No additional action needed before launch. Standard Revenue Ireland declaration process applies. Not a product decision but logged so future sessions don't re-research.
+
+**The rules (verified May 11, 2026):**
+- BMaC payments go directly to creator's Stripe/bank — BMaC withholds nothing
+- Ireland Revenue treats this as taxable side income
+- Under €5,000 profit/year → declare via Form 12 in myAccount (simple add-on to existing PAYE return)
+- Over €5,000 profit/year → must register for full self-assessment (Form 11)
+- VAT registration threshold (€42,500 for services) — well beyond likely volume
+- Realistic forecast for JobTrail: €0–€200/year in year one
+
+**Action items:**
+- Set up BMaC + Stripe account when ready to launch the link
+- Keep donation records (BMaC dashboard handles this)
+- Declare on Form 12 once a year
+- If donations ever exceed €5k/year: register for self-assessment
+
+**Caveat:** Not tax advice. 15-minute chat with an Irish accountant recommended before launch but not a blocker.
+
+---
+
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5
@@ -144,3 +239,4 @@
 - **Gemini prompt accuracy** — section 6 prompt is v0; needs 20+ real emails for testing in week 4
 - **Initial scan UX for heavy users** — if free tier is exceeded, how do we explain "we'll keep scanning over 2-3 days" to users? Decide in week 4.
 - **Free tier viability for typical users** — week 4: measure actual LLM call volume on a real job seeker's 30-day inbox. If under 20 RPD, keep "free tier" framing in context doc. If over, update context doc per Option C honest framing.
+- **BMaC link placement and copy** — defer final wording until v1 polish week 8. Default copy: "JobTrail is free and open source. If it saved you time, you can buy me a coffee." Verify BMaC URL is live before submitting to Chrome Web Store.
