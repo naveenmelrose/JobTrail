@@ -1,8 +1,8 @@
-# JobTrail — Build Spec (v0.1)
+# JobTrail — Build Spec (v0.2)
 
 > Technical build specification. Companion to `JobTrail-Project-Context.md`.
 > Context doc = *what* and *why*. This doc = *how*.
-> Last updated: May 11, 2026
+> Last updated: May 11, 2026 — Gemini rate limits verified, OAuth client deferred to week 1.
 
 ---
 
@@ -159,8 +159,9 @@ Key fields (illustrative — Claude Code should generate the actual file):
 ## 6. Gemini API integration
 
 ### Model choice
-- **Default:** `gemini-2.0-flash` or whichever current model is the cheapest fast model with sufficient quality. **[VERIFY at build time]** — Gemini's lineup changes frequently.
-- **Why flash:** Classification is a simple task. Latency matters more than reasoning depth. Free tier covers it.
+- **Default:** `gemini-2.5-flash` (verified May 11, 2026 as current Flash generation).
+- **Why flash:** Classification is a simple task. Latency matters more than reasoning depth. Free tier supports light dev use; Tier 1 covers production.
+- **Alternative to consider in week 4 testing:** `gemini-2.5-flash-lite` may have different (potentially higher) free-tier limits — worth checking against real classification volume before committing.
 
 ### Auth
 - User pastes their API key during onboarding (screen 3 in mockup).
@@ -168,11 +169,34 @@ Key fields (illustrative — Claude Code should generate the actual file):
 
 ### Request shape
 ```
-POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=USER_KEY
+POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=USER_KEY
 ```
 
-### Free tier reality check
-**[VERIFY at build time]** Gemini free tier currently allows N requests per minute and M per day. A 500-email initial scan must fit within that, or the scan needs rate-limiting / batching. Check before week 4.
+### Rate limits (verified May 11, 2026)
+
+**Free tier (Gemini 2.5 Flash):**
+- 5 RPM (requests per minute)
+- 250K TPM (input tokens per minute)
+- **20 RPD (requests per day)** ← the binding constraint
+- Rate limits are per-project, not per-API-key. Each user creating their own key in their own Google Cloud project effectively gets their own quota.
+
+**Tier 1 (Gemini 2.5 Flash):**
+- ~1,000 RPM
+- ~1M TPM
+- ~10,000 RPD
+- $250/month spending cap
+- Qualification: link a billing account. No minimum spend. Upgrade is instant.
+- Realistic cost for typical JobTrail use: less than $1/year per user.
+
+### What this means for the build
+- **Free tier is sufficient for dev (weeks 1–7).** As the developer testing on your own inbox, 20 RPD covers small-volume testing.
+- **Free tier is too tight for production at scale.** A 500-email initial scan that triggers ~30–50 LLM calls would exceed 20 RPD on day 1.
+- **Pre-filtering before LLM matters.** ATS whitelist (section 7) should catch the majority. Add secondary heuristics if needed to keep LLM calls minimal.
+- **Onboarding for end-users:** recommend Tier 1 (link billing account) with clear "less than $1/year for typical use, requires credit card on file" framing. Free tier remains as fallback for light users.
+- **Update from context doc:** section 3 of the context doc said "free tier" — this needs to be softened to "Tier 1 recommended, free tier works for light users."
+
+### Batch API as fallback option
+Google offers a separate **Batch API** for Gemini with its own quota (3M batch enqueued tokens on Tier 1 Gemini 2.5 Flash). If the initial scan hits interactive rate limits, the initial scan can be re-architected to submit a single batch job and poll for results. This is more complex than per-email API calls but sidesteps RPM/RPD entirely. **Defer this decision to week 4 — test interactive first.**
 
 ### Failure modes the code must handle
 - Key invalid → show clear error, send user back to onboarding step 3
@@ -380,9 +404,14 @@ The mockup is the visual spec. Component breakdown (Claude Code can refine):
 ### Background scan
 **[OUT OF SCOPE for v1]** Auto-scan on a schedule. v1 is manual re-scan only.
 
-### Rate limiting
-- Gmail API: 1 billion quota units/day, ~250/sec per user. Not a real concern at 500 emails.
-- Gemini free tier: **[VERIFY]** Currently around 15 req/min for flash. Initial scan of ~100 non-whitelist emails could hit this. Solution: process in chunks of 10 with a 5-second pause.
+### Rate limiting (verified May 11, 2026)
+- **Gmail API:** 1 billion quota units/day, ~250/sec per user. Not a real concern at 500 emails.
+- **Gemini free tier:** 5 RPM / 20 RPD on Gemini 2.5 Flash. A 500-email scan with ~30–50 LLM calls would exceed 20 RPD on day 1.
+- **Mitigation strategy (in order of preference):**
+  1. Aggressive pre-filtering — ATS whitelist catches most emails; add secondary heuristics (sender patterns, subject keywords) to filter obvious non-applications before LLM.
+  2. Tier 1 upgrade — see section 6. Recommended path for production users.
+  3. Batch API — fallback if interactive limits remain a problem at week 4.
+  4. Stagger initial scan — last resort. Process 18 emails/day (with margin), show "still scanning" UX for 2–3 days.
 
 ---
 
@@ -478,7 +507,7 @@ Listed explicitly so Claude Code doesn't add them on enthusiasm:
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Google OAuth verification for `gmail.readonly` is denied or takes months | Medium | High | Start verification process in week 1, not week 8. Have a "testing mode" build ready as fallback. |
-| Gemini free tier limits make 500-email scans too slow | Medium | Medium | Test in week 4 with real data. If broken, chunk + delay. |
+| Gemini free tier limits make 500-email scans too slow | **Confirmed** | Medium | **Resolved May 11, 2026:** Free tier 20 RPD is too tight for heavy users; Tier 1 upgrade ($1/year typical) is the recommended path. Free tier sufficient for dev. Batch API available as fallback. See section 6. |
 | Gemini prompt accuracy is below useful threshold | Medium | High | Budget extra time in week 4 for prompt iteration. Have at least 20 real emails to test against. |
 | Mockup-to-React port surfaces design gaps | Low | Low | The mockup is detailed. Most gaps will be minor. |
 | User's Gmail has weird edge cases not in test data | High | Low | Accept it. Iterate post-launch based on real reports. |
