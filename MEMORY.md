@@ -115,9 +115,32 @@
 
 ---
 
+## May 11, 2026 — Defer context doc update on "free tier" language until week 4
+
+**What was decided:** Do not update the context doc to soften "free tier" language right now. Revisit in week 4 after real testing reveals actual LLM call volume on typical job-seeker inboxes.
+
+**Why:**
+- Target users are job seekers, often unemployed — credit-card-linking friction at the wrong moment for them
+- The 30–50 LLM calls per scan estimate was pessimistic, based on a power-user with 500 emails
+- Realistic typical user: 10–15 applications/month, ATS whitelist catches 80%+, actual LLM calls maybe 5–10 per scan — likely under 20 RPD
+- We don't know yet whether free tier is actually a problem for the real target user
+- Context doc is for internal use (Claude + me); user-facing copy is in the app and can change independently
+- Updating now would create unnecessary friction before we know if it's needed
+
+**What was rejected:**
+- Option A: Update context doc to explicitly mention Tier 1 — would frame the project as "needs payment" before we know that's true
+- Option C: Softer compromise wording — still introduces billing concept prematurely
+
+**Risk accepted:** If reviewers ask "is this really free?" while looking at the mockup, the honest answer is: "AI part is free for typical use. Heavy users may eventually need to pay Google ~$1/year. I'm testing to find the line."
+
+**Revisit trigger:** Week 4 testing. If real LLM call volume on a typical inbox stays under 20/day, no update needed — keep "free tier" framing. If it exceeds, update context doc with honest framing of when Tier 1 becomes necessary.
+
+---
+
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5
 - **OAuth verification for `gmail.readonly`** — highest risk dependency in the project; submit early in week 1
 - **Gemini prompt accuracy** — section 6 prompt is v0; needs 20+ real emails for testing in week 4
 - **Initial scan UX for heavy users** — if free tier is exceeded, how do we explain "we'll keep scanning over 2-3 days" to users? Decide in week 4.
+- **Free tier viability for typical users** — week 4: measure actual LLM call volume on a real job seeker's 30-day inbox. If under 20 RPD, keep "free tier" framing in context doc. If over, update context doc per Option C honest framing.
