@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobTrail — Clickable Mockup</title>
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root {
+    --coral: #F96167;
+    --coral-light: #FCD5CE;
+    --coral-soft: #FFE8E3;
+    --cream: #FFF7F2;
+    --navy: #2F3C7E;
+    --navy-dark: #1F2348;
+    --ink: #1F2348;
+    --muted: #6B7280;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-700: #374151;
+    --mint: #B8E0D2;
+    --mint-deep: #1F6F47;
+    --lemon: #FFE9A8;
+    --lemon-deep: #8B6F00;
+    --lavender: #C9B6E4;
+    --lavender-deep: #5B4493;
+    --peach: #F4CFA6;
+    --peach-deep: #8B5A1E;
+    --shadow-sm: 0 1px 2px rgba(31, 35, 72, 0.06);
+    --shadow-md: 0 4px 12px rgba(31, 35, 72, 0.08);
+    --shadow-lg: 0 12px 28px rgba(31, 35, 72, 0.15);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --font-display: 'Trebuchet MS', 'Verdana', sans-serif;
+    --font-body: 'Calibri', 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--ink);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  input { font-family: inherit; }
+
+  /* ============ DEMO BANNER ============ */
+  .demo-banner {
+    background: var(--navy);
+    color: white;
+    text-align: center;
+    padding: 8px 16px;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    position: relative;
+    z-index: 100;
+  }
+  .demo-banner strong { color: var(--coral-light); }
+  .demo-reset {
+    margin-left: 14px;
+    color: var(--coral-light);
+    text-decoration: underline;
+    font-size: 12px;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .demo-reset:hover { color: white; }
+
+  /* ============ TOP CHROME BAR ============ */
+  .chrome-bar {
+    background: #EAECEF;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #d1d5db;
+  }
+  .chrome-dots { display: flex; gap: 7px; }
+  .chrome-dots span {
+    width: 12px; height: 12px; border-radius: 50%;
+  }
+  .chrome-dots span:nth-child(1) { background: #FF5F57; }
+  .chrome-dots span:nth-child(2) { background: #FEBC2E; }
+  .chrome-dots span:nth-child(3) { background: #28C840; }
+  .chrome-url {
+    flex: 1;
+    background: white;
+    border-radius: 14px;
+    padding: 5px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid #d1d5db;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .chrome-ext-icon {
+    width: 28px; height: 28px;
+    background: var(--coral);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ============ SCREENS (steps) ============ */
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ ONBOARDING SCREENS (centered card layout) ============ */
+  .onboarding-wrap {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(249, 97, 103, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(47, 60, 126, 0.05) 0%, transparent 50%),
+      var(--cream);
+  }
+  .onboarding-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 540px;
+    width: 100%;
+    padding: 44px 40px;
+    text-align: center;
+    position: relative;
+  }
+  .progress-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .progress-dots span {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    transition: all 0.3s;
+  }
+  .progress-dots span.active {
+    background: var(--coral);
+    width: 28px;
+    border-radius: 4px;
+  }
+  .progress-dots span.complete { background: var(--coral); }
+
+  .ob-icon-wrap {
+    width: 76px; height: 76px;
+    background: var(--coral-soft);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: var(--coral);
+  }
+  .ob-icon-wrap svg { width: 36px; height: 36px; }
+
+  h1.ob-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--ink);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+  p.ob-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+  .ob-primary-btn {
+    background: var(--coral);
+    color: white;
+    padding: 13px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(249, 97, 103, 0.35);
+    transition: all 0.15s;
+  }
+  .ob-primary-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249, 97, 103, 0.45); }
+  .ob-secondary-btn {
+    color: var(--muted);
+    margin-top: 14px;
+    padding: 8px 16px;
+    font-size: 13px;
+    text-decoration: underline;
+  }
+  .ob-secondary-btn:hover { color: var(--ink); }
+
+  .feature-list {
+    text-align: left;
+    margin: 24px 0;
+    font-size: 14px;
+    color: var(--gray-700);
+  }
+  .feature-list li {
+    list-style: none;
+    padding: 8px 0 8px 30px;
+    position: relative;
+  }
+  .feature-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--coral);
+    font-weight: bold;
+    background: var(--coral-soft);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  /* Google permission screen */
+  .google-permission {
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: left;
+    margin: 20px 0;
+    background: var(--gray-100);
+    font-size: 13px;
+  }
+  .google-permission .perm-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    color: var(--gray-700);
+  }
+  .google-permission .perm-row svg { color: var(--coral); flex-shrink: 0; }
+
+  /* AI helper screen */
+  .ai-explain {
+    background: var(--cream);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 18px 0 22px;
+    text-align: left;
+    font-size: 13px;
+    color: var(--gray-700);
+    border-left: 3px solid var(--coral);
+  }
+  .ai-explain strong { color: var(--ink); }
+  .key-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .key-input-row input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+  }
+  .key-input-row input:focus { outline: none; border-color: var(--coral); }
+  .external-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: 1px solid var(--coral);
+    color: var(--coral);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    background: white;
+  }
+  .external-link-btn:hover { background: var(--coral-soft); }
+
+  /* Scanning screen */
+  .scan-progress-wrap {
+    margin: 30px 0;
+  }
+  .scan-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 16px 0 12px;
+  }
+  .scan-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--coral) 0%, #FF8B91 100%);
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.05s linear;
+  }
+  .scan-status {
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 20px;
+  }
+  .scan-spinner {
+    width: 48px; height: 48px;
+    border: 4px solid var(--coral-soft);
+    border-top-color: var(--coral);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 18px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ============ DASHBOARD ============ */
+  .dash-wrap {
+    min-height: calc(100vh - 80px);
+    background: var(--cream);
+    padding: 0;
+  }
+  .dash-header {
+    background: var(--navy);
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .dash-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+  }
+  .dash-logo-mark {
+    width: 30px; height: 30px;
+    background: var(--coral);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  .dash-search {
+    flex: 1;
+    max-width: 380px;
+    position: relative;
+  }
+  .dash-search input {
+    width: 100%;
+    padding: 9px 14px 9px 36px;
+    border: none;
+    border-radius: 8px;
+    background: white;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .dash-search input:focus { outline: 2px solid var(--coral-light); }
+  .dash-search svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    width: 14px; height: 14px;
+  }
+  .dash-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 7px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.12); }
+
+  .dash-summary {
+    padding: 16px 24px 0;
+    color: var(--muted);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dash-summary strong { color: var(--ink); }
+  .summary-pill {
+    background: white;
+    padding: 5px 12px;
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .summary-pill em {
+    font-style: normal;
+    color: var(--coral);
+    font-weight: 700;
+  }
+
+  /* Kanban */
+  .kanban {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    padding: 16px 24px 80px;
+    overflow-x: auto;
+  }
+  .col {
+    background: rgba(255,255,255,0.5);
+    border-radius: 10px;
+    padding: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+  .col-header {
+    padding: 11px 12px 9px;
+    border-radius: 10px 10px 0 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .col-header .count {
+    background: rgba(255,255,255,0.6);
+    color: var(--ink);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .col-applied .col-header { background: var(--coral-light); }
+  .col-conv .col-header { background: var(--lavender); }
+  .col-int .col-header { background: var(--lemon); }
+  .col-await .col-header { background: var(--peach); }
+  .col-final .col-header { background: var(--mint); }
+  .col-ghosted .col-header { background: var(--gray-200); }
+
+  .col-body {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .job-card {
+    background: white;
+    border-radius: 8px;
+    padding: 10px 11px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--gray-200);
+    text-align: left;
+    width: 100%;
+  }
+  .job-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--coral-light);
+  }
+  .job-card .co {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+  .job-card .role {
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  .job-card .subj {
+    color: var(--gray-700);
+    font-size: 10.5px;
+    font-style: italic;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .job-card .time {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .empty-col {
+    padding: 20px 12px;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* ============ MODAL ============ */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 35, 72, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.active {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal {
+    background: white;
+    border-radius: var(--radius-lg);
+    max-width: 640px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .modal-header {
+    padding: 24px 28px 18px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 16px;
+  }
+  .modal-header h2 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .modal-header .role {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--coral-soft); color: var(--coral); }
+
+  .status-pill {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .status-Applied { background: var(--coral-light); color: var(--coral); }
+  .status-InConversation { background: var(--lavender); color: var(--lavender-deep); }
+  .status-InterviewScheduled { background: var(--lemon); color: var(--lemon-deep); }
+  .status-AwaitingOutcome { background: var(--peach); color: var(--peach-deep); }
+  .status-Offer { background: var(--mint); color: var(--mint-deep); }
+  .status-Rejected { background: var(--gray-200); color: var(--gray-700); }
+  .status-Withdrawn { background: var(--gray-200); color: var(--gray-700); }
+  .status-Ghosted { background: var(--gray-200); color: var(--gray-700); }
+
+  .modal-section { padding: 18px 28px; }
+  .modal-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--coral);
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+  .modal-section .from {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .modal-section .email-body {
+    background: var(--cream);
+    border-left: 3px solid var(--coral-light);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--gray-700);
+    font-style: italic;
+  }
+  .modal-section .jd-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--gray-700);
+  }
+  .modal-section .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    font-size: 13px;
+  }
+  .modal-section .meta-grid div span {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .modal-section .meta-grid div strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .modal-footer {
+    padding: 18px 28px 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--gray-200);
+    background: var(--cream);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .modal-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .modal-btn.primary { background: var(--coral); color: white; }
+  .modal-btn.primary:hover { background: #e54550; }
+  .modal-btn.outline {
+    background: white;
+    color: var(--navy);
+    border: 1px solid var(--navy);
+  }
+  .modal-btn.outline:hover { background: var(--navy); color: white; }
+  .modal-btn.ghost {
+    background: white;
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+  }
+  .modal-btn.ghost:hover { border-color: var(--coral); color: var(--coral); }
+
+  /* ============ SETTINGS DRAWER ============ */
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 35, 72, 0.4);
+    z-index: 990;
+    display: none;
+  }
+  .drawer-backdrop.active { display: block; }
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 380px;
+    height: 100vh;
+    background: white;
+    box-shadow: -8px 0 30px rgba(0,0,0,0.15);
+    z-index: 995;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+  }
+  .drawer.active { right: 0; }
+  .drawer-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .drawer-header h3 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--ink);
+  }
+  .drawer-body { padding: 20px 24px; }
+  .setting-row {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-row label {
+    display: block;
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .setting-row .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .setting-row select,
+  .setting-row input[type="number"] {
+    padding: 8px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 13px;
+    width: 100%;
+  }
+  .ghost-readout {
+    background: var(--cream);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .ghost-readout strong { color: var(--coral); }
+
+  /* ============ EMPTY STATE for no search results ============ */
+  .no-results {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--muted);
+    grid-column: 1 / -1;
+  }
+  .no-results h3 {
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .kanban { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .kanban { grid-template-columns: repeat(2, 1fr); padding: 12px; }
+    .onboarding-card { padding: 30px 24px; }
+    .dash-search { max-width: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- DEMO BANNER -->
+<div class="demo-banner">
+  <strong>DEMO MOCKUP</strong> — Click through to see the full JobTrail experience. No real data, no real Gmail connection.
+  <button class="demo-reset" onclick="resetToStart()">Restart from beginning</button>
+</div>
+
+<!-- CHROME BROWSER FRAME -->
+<div class="chrome-bar">
+  <div class="chrome-dots"><span></span><span></span><span></span></div>
+  <div class="chrome-url">chrome.google.com/webstore/detail/jobtrail</div>
+  <div class="chrome-ext-icon" title="JobTrail extension">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 3H2C.9 3 0 3.9 0 5v14c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H2V5h20v14zM2 7l10 6 10-6V5L12 11 2 5z"/></svg>
+  </div>
+</div>
+
+<!-- ============ SCREEN 1: WELCOME ============ -->
+<div class="screen active" id="screen-welcome">
+  <div class="onboarding-wrap">
+    <div class="onboarding-card">
+      <div class="progress-dots">
+        <span class="active"></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="ob-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 3H2C.9 3 0 3.9 0 5v14c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H2V5h20v14zM2 7l10 6 10-6V5L12 11 2 5z"/></svg>
+      </div>
+      <h1 class="ob-title">Welcome to JobTrail</h1>
+      <p class="ob-sub">A friendly Chrome extension that finds every job application in your inbox — so you can focus on getting hired.</p>
+      <ul class="feature-list">
+        <li>Auto-detects applications from any job board</li>
+        <li>Updates status as new emails arrive</li>
+        <li>Private — your data stays on your computer</li>
+      </ul>
+      <button class="ob-primary-btn" onclick="goToScreen('signin')">Get started</button>
+      <div><button class="ob-secondary-btn" onclick="goToScreen('dashboard')">Skip onboarding (demo only)</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 2: SIGN IN WITH GOOGLE ============ -->
+<div class="screen" id="screen-signin">
+  <div class="onboarding-wrap">
+    <div class="onboarding-card">
+      <div class="progress-dots">
+        <span class="complete"></span><span class="active"></span><span></span><span></span><span></span>
+      </div>
+      <div class="ob-icon-wrap" style="background: #E8F0FE; color: #4285F4;">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v3.83h5.39c-.5 2.43-2.57 3.83-5.39 3.83-3.27 0-5.93-2.66-5.93-5.93s2.66-5.93 5.93-5.93c1.45 0 2.78.53 3.81 1.4l2.71-2.71C16.78 3.81 14.55 3 12 3 7.03 3 3 7.03 3 12s4.03 9 9 9c5.18 0 8.62-3.65 8.62-8.78 0-.49-.04-.97-.13-1.45z"/></svg>
+      </div>
+      <h1 class="ob-title">Sign in with Google</h1>
+      <p class="ob-sub">Give JobTrail permission to read your Gmail. This lets us find your job applications automatically.</p>
+      <div class="google-permission">
+        <div class="perm-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Read your Gmail messages (we won't send, delete, or modify anything)
+        </div>
+        <div class="perm-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          See your Google Calendar events (for interview detection)
+        </div>
+        <div class="perm-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zM7 10h10v2H7v-2zm0 4h7v2H7v-2z"/></svg>
+          Your email address (so we can save your preferences)
+        </div>
+      </div>
+      <button class="ob-primary-btn" onclick="goToScreen('aikey')">Continue with Google</button>
+      <div><button class="ob-secondary-btn" onclick="goToScreen('welcome')">Back</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 3: AI HELPER ============ -->
+<div class="screen" id="screen-aikey">
+  <div class="onboarding-wrap">
+    <div class="onboarding-card">
+      <div class="progress-dots">
+        <span class="complete"></span><span class="complete"></span><span class="active"></span><span></span><span></span>
+      </div>
+      <div class="ob-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C9.24 2 7 4.24 7 7s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm9 11v-1c0-2.66-5.33-4-8-4h-2c-2.67 0-8 1.34-8 4v1h18zm-16-1.01c.2-.72 3.31-2 7-2 3.69 0 6.8 1.28 7 2v.01H5z"/></svg>
+      </div>
+      <h1 class="ob-title">Connect your AI helper</h1>
+      <p class="ob-sub">JobTrail uses Google's free AI to read your emails. One-time setup — takes about 2 minutes.</p>
+      <div class="ai-explain">
+        <strong>Why this is the private choice:</strong> Your emails go from Gmail directly to Google's AI and back to your browser. We never see your data. It's your connection, not ours.
+      </div>
+      <a href="#" class="external-link-btn" onclick="event.preventDefault(); alert('In the real product, this opens Google AI Studio in a new tab where you create a free key.');">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+        Get your free key from Google
+      </a>
+      <div class="key-input-row">
+        <input type="text" id="apikey" placeholder="Paste your key here (starts with AIza...)" />
+        <button class="ob-primary-btn" style="padding: 10px 20px; font-size: 13px;" onclick="goToScreen('scanning'); startScan();">Continue</button>
+      </div>
+      <div><button class="ob-secondary-btn" onclick="goToScreen('signin')">Back</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 4: SCANNING ============ -->
+<div class="screen" id="screen-scanning">
+  <div class="onboarding-wrap">
+    <div class="onboarding-card">
+      <div class="progress-dots">
+        <span class="complete"></span><span class="complete"></span><span class="complete"></span><span class="active"></span><span></span>
+      </div>
+      <div class="scan-spinner"></div>
+      <h1 class="ob-title">Scanning your inbox</h1>
+      <p class="ob-sub">Reading your last 30 days of emails. Finding job applications across LinkedIn, Indeed, company sites, and recruiters.</p>
+      <div class="scan-progress-wrap">
+        <div class="scan-bar"><div class="scan-bar-fill" id="scanBar"></div></div>
+        <div class="scan-status" id="scanStatus">Starting…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 5: DASHBOARD ============ -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div class="dash-logo">
+        <div class="dash-logo-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22 3H2C.9 3 0 3.9 0 5v14c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H2V5h20v14zM2 7l10 6 10-6V5L12 11 2 5z"/></svg>
+        </div>
+        JobTrail
+      </div>
+      <div class="dash-search">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="searchBox" placeholder="Search applications…" oninput="filterJobs()" />
+      </div>
+      <div class="dash-actions">
+        <button class="icon-btn" title="Re-scan inbox" onclick="alert('In the real product, this re-scans your Gmail for new applications.')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+        <button class="icon-btn" title="Add manually" onclick="alert('In the real product, this opens a form to add a job manually.')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </button>
+        <button class="icon-btn" title="Settings" onclick="toggleDrawer()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="dash-summary">
+      <div class="summary-pill">Total: <strong id="totalCount">0</strong></div>
+      <div class="summary-pill">Active: <em id="activeCount">0</em></div>
+      <div class="summary-pill">This week: <strong id="weekCount">0</strong> applied</div>
+      <div style="margin-left: auto; font-size: 12px;">Sorted by most recent activity</div>
+    </div>
+
+    <div class="kanban" id="kanban"><!-- columns rendered by JS --></div>
+  </div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-backdrop" id="modal" onclick="if(event.target === this) closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="m-company">Stripe</h2>
+        <div class="role" id="m-role">Senior Product Manager</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <div class="modal-section">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+        <span class="status-pill" id="m-status">Interview Scheduled</span>
+        <span style="font-size: 12px; color: var(--muted);" id="m-time">Last activity: 3 days ago</span>
+      </div>
+    </div>
+    <div class="modal-section">
+      <h3>Most recent email</h3>
+      <div class="from" id="m-from">From: Sarah Chen, Stripe Recruiting</div>
+      <div class="email-body" id="m-body">"Hi! We loved your background — would you have time for a 45-minute chat with our PM lead next Tuesday at 3pm PT? I'll send a calendar invite once you confirm…"</div>
+    </div>
+    <div class="modal-section">
+      <h3>Application details</h3>
+      <div class="meta-grid">
+        <div><span>Applied on</span><strong id="m-applied">Apr 12, 2026</strong></div>
+        <div><span>Source</span><strong id="m-source">LinkedIn</strong></div>
+        <div><span>Recruiter</span><strong id="m-recruiter">Sarah Chen</strong></div>
+        <div><span>Recruiter email</span><strong id="m-email">sarah.chen@stripe.com</strong></div>
+      </div>
+    </div>
+    <div class="modal-section" id="m-jd-section">
+      <h3>Job description</h3>
+      <div class="jd-text" id="m-jd">Lead product development for Stripe's payments platform. Define product strategy, work with engineering, and ship features that power millions of businesses worldwide.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn primary" onclick="alert('In the real product, this opens the Gmail thread.')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22 3H2C.9 3 0 3.9 0 5v14c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H2V5h20v14zM2 7l10 6 10-6V5L12 11 2 5z"/></svg>
+        Open in Gmail
+      </button>
+      <button class="modal-btn outline" onclick="alert('In the real product, this opens the original job posting.')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+        View Job Post
+      </button>
+      <button class="modal-btn ghost" onclick="alert('In the real product, this opens an editor for status, notes, and manual overrides.')">Edit / Notes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SETTINGS DRAWER ============ -->
+<div class="drawer-backdrop" id="drawerBack" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h3>Settings</h3>
+    <button class="modal-close" onclick="toggleDrawer()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div class="setting-row">
+      <label>Mark as ghosted after</label>
+      <div class="hint">If there's no email reply for this many days, the job moves to "Ghosted" column.</div>
+      <input type="number" value="30" min="7" max="60" disabled />
+      <div class="ghost-readout">v1 is locked at <strong>30 days</strong>. Slider coming in v2.</div>
+    </div>
+    <div class="setting-row">
+      <label>Initial scan window</label>
+      <div class="hint">How far back JobTrail looks when you first install.</div>
+      <select>
+        <option>Last 30 days (default)</option>
+        <option>Last 60 days</option>
+        <option>Last 90 days</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <label>AI API key</label>
+      <div class="hint">Your Google Gemini key. Stored locally on this computer only.</div>
+      <input type="password" value="AIzaSyDemo..." style="font-family: monospace;" />
+    </div>
+    <div class="setting-row">
+      <label style="color: var(--coral);">Export everything</label>
+      <div class="hint">Download all your tracked jobs as a CSV file.</div>
+      <button class="modal-btn outline" style="margin-top: 6px;" onclick="alert('In the real product, this downloads a CSV.')">Export CSV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============ DUMMY DATA ============
+  const jobs = [
+    {
+      id: 1, co: "Stripe", role: "Senior Product Manager", status: "InterviewScheduled",
+      subj: "Re: Interview scheduled — Tuesday 3pm PT",
+      time: "3 days ago", appliedOn: "Apr 12, 2026", source: "LinkedIn",
+      recruiter: "Sarah Chen", email: "sarah.chen@stripe.com",
+      body: "Hi! We loved your background — would you have time for a 45-minute chat with our PM lead next Tuesday at 3pm PT? I'll send a calendar invite once you confirm…",
+      jd: "Lead product development for Stripe's payments platform. Define product strategy, work with engineering, and ship features that power millions of businesses worldwide."
+    },
+    {
+      id: 2, co: "Linear", role: "Engineering Manager", status: "InterviewScheduled",
+      subj: "Calendar invite: Linear x [You] — Round 2",
+      time: "1 day ago", appliedOn: "Apr 8, 2026", source: "Company site",
+      recruiter: "James Walsh", email: "james@linear.app",
+      body: "Hey, sending across the calendar invite for our second-round panel next Thursday. The team is excited to chat. Let me know if the time doesn't work…",
+      jd: "Lead a team of 6 engineers building Linear's collaboration features. Strong technical background required."
+    },
+    {
+      id: 3, co: "Klarna", role: "Product Manager", status: "InConversation",
+      subj: "Quick question about your application",
+      time: "2 days ago", appliedOn: "Apr 18, 2026", source: "Indeed",
+      recruiter: "Lina Persson", email: "lina.p@klarna.com",
+      body: "Thanks for applying! Before we move forward, can you share your visa status and earliest available start date? Also curious about your fintech experience.",
+      jd: "Drive product strategy for Klarna's checkout experience across European markets."
+    },
+    {
+      id: 4, co: "Figma", role: "Product Manager", status: "InConversation",
+      subj: "Take-home assignment for the PM role",
+      time: "5 days ago", appliedOn: "Apr 5, 2026", source: "LinkedIn",
+      recruiter: "Anu Krishnan", email: "anu@figma.com",
+      body: "Great chatting yesterday! Here's the take-home assignment we discussed — please send it back within a week. Looking forward to your thinking.",
+      jd: "Define product direction for Figma's design systems and component library features."
+    },
+    {
+      id: 5, co: "Vercel", role: "Senior Designer", status: "Applied",
+      subj: "Thanks for applying to Vercel",
+      time: "6 hours ago", appliedOn: "May 10, 2026", source: "Company site",
+      recruiter: "Vercel Talent Team", email: "talent@vercel.com",
+      body: "Thanks for your application to the Senior Designer role at Vercel! Our team will review your application and reach out if there's a match.",
+      jd: "Design beautiful, performant interfaces for Vercel's developer platform. Strong portfolio in B2B SaaS required."
+    },
+    {
+      id: 6, co: "Ramp", role: "Engineering Manager", status: "Applied",
+      subj: "Application received — Engineering Manager",
+      time: "2 days ago", appliedOn: "May 8, 2026", source: "LinkedIn",
+      recruiter: "Ramp Recruiting", email: "noreply@ramp.com",
+      body: "We've received your application for the Engineering Manager role. Our team typically responds within 2 weeks. Thanks for your interest!",
+      jd: "Lead Ramp's spend management engineering team. Series D fintech, fast-paced environment."
+    },
+    {
+      id: 7, co: "Discord", role: "Senior PM", status: "Applied",
+      subj: "Application confirmation — Discord",
+      time: "4 days ago", appliedOn: "May 6, 2026", source: "Greenhouse",
+      recruiter: "Discord Hiring", email: "hiring@discord.com",
+      body: "Your application has been received. We'll be in touch within 10 business days if your background is a fit for this role.",
+      jd: "Lead PM for Discord's community features. Help shape how millions of people connect online."
+    },
+    {
+      id: 8, co: "Notion", role: "Senior Designer", status: "AwaitingOutcome",
+      subj: "Thanks for joining us yesterday",
+      time: "1 day ago", appliedOn: "Mar 28, 2026", source: "LinkedIn",
+      recruiter: "Maya Patel", email: "maya@notion.so",
+      body: "Thanks for the great conversation yesterday. The team has plenty to discuss internally — we'll get back to you with next steps by end of next week.",
+      jd: "Design Notion's AI and editor experiences. Bring craft and attention to detail to a tool used by millions."
+    },
+    {
+      id: 9, co: "Loom", role: "Product Manager", status: "AwaitingOutcome",
+      subj: "Final round complete — next steps",
+      time: "3 days ago", appliedOn: "Apr 2, 2026", source: "Otta",
+      recruiter: "Daniel Lee", email: "daniel@loom.com",
+      body: "Thanks for completing the final round yesterday. We'll be discussing with the hiring panel this week and circle back by Friday with a decision.",
+      jd: "PM for Loom's video communication platform. Async-first culture, distributed team."
+    },
+    {
+      id: 10, co: "Plaid", role: "Product Manager", status: "Offer",
+      subj: "🎉 Offer letter — Plaid PM role",
+      time: "2 days ago", appliedOn: "Mar 15, 2026", source: "LinkedIn",
+      recruiter: "Marcus Hill", email: "marcus@plaid.com",
+      body: "We're delighted to extend an offer for the Product Manager role at Plaid! Please find the formal offer letter attached. Looking forward to your decision.",
+      jd: "PM for Plaid's identity verification products. Drive product strategy in a high-growth fintech."
+    },
+    {
+      id: 11, co: "Shopify", role: "Senior PM", status: "Rejected",
+      subj: "Update on your Shopify application",
+      time: "1 week ago", appliedOn: "Mar 10, 2026", source: "Company site",
+      recruiter: "Shopify Talent", email: "talent@shopify.com",
+      body: "Thank you for your interest in Shopify. While your background is impressive, we've decided to move forward with another candidate whose experience more closely matches our current needs.",
+      jd: "Senior PM role on Shopify's merchant experience team."
+    },
+    {
+      id: 12, co: "GitLab", role: "Engineering Manager", status: "Withdrawn",
+      subj: "(Manually withdrawn)",
+      time: "2 weeks ago", appliedOn: "Feb 28, 2026", source: "LinkedIn",
+      recruiter: "GitLab Hiring", email: "hiring@gitlab.com",
+      body: "You withdrew this application on Apr 25, 2026 — added a note: 'Accepted role at another company.'",
+      jd: "EM role on GitLab's CI/CD team."
+    },
+    {
+      id: 13, co: "Atlassian", role: "Product Manager", status: "Ghosted",
+      subj: "Application received — Atlassian PM",
+      time: "32 days ago", appliedOn: "Apr 9, 2026", source: "LinkedIn",
+      recruiter: "Atlassian Hiring", email: "noreply@atlassian.com",
+      body: "Thanks for applying to the Product Manager role at Atlassian. We're reviewing applications and will be in touch if there's a match.",
+      jd: "PM for Atlassian's Jira platform. Drive enterprise productivity features."
+    },
+    {
+      id: 14, co: "Cloudflare", role: "Senior Designer", status: "Ghosted",
+      subj: "We've received your application",
+      time: "45 days ago", appliedOn: "Mar 27, 2026", source: "Greenhouse",
+      recruiter: "Cloudflare Talent", email: "talent@cloudflare.com",
+      body: "Your application has been received. Due to a high volume of applications, we may take some time to respond.",
+      jd: "Senior Designer for Cloudflare's developer experience surfaces."
+    },
+  ];
+
+  const STATUS_LABELS = {
+    Applied: "Applied",
+    InConversation: "In Conversation",
+    InterviewScheduled: "Interview Scheduled",
+    AwaitingOutcome: "Awaiting Outcome",
+    Offer: "Offer / Rejected / Withdrawn",
+    Rejected: "Offer / Rejected / Withdrawn",
+    Withdrawn: "Offer / Rejected / Withdrawn",
+    Ghosted: "Ghosted",
+  };
+  const STATUS_PRETTY = {
+    Applied: "Applied",
+    InConversation: "In Conversation",
+    InterviewScheduled: "Interview Scheduled",
+    AwaitingOutcome: "Awaiting Outcome",
+    Offer: "Offer",
+    Rejected: "Rejected",
+    Withdrawn: "Withdrawn",
+    Ghosted: "Ghosted",
+  };
+  const COL_DEFS = [
+    { id: "col-applied", key: "Applied", label: "Applied", filter: j => j.status === "Applied" },
+    { id: "col-conv", key: "InConversation", label: "In Conversation", filter: j => j.status === "InConversation" },
+    { id: "col-int", key: "InterviewScheduled", label: "Interview Scheduled", filter: j => j.status === "InterviewScheduled" },
+    { id: "col-await", key: "AwaitingOutcome", label: "Awaiting Outcome", filter: j => j.status === "AwaitingOutcome" },
+    { id: "col-final", key: "Final", label: "Offer / Rejected", filter: j => ["Offer", "Rejected", "Withdrawn"].includes(j.status) },
+    { id: "col-ghosted", key: "Ghosted", label: "Ghosted", filter: j => j.status === "Ghosted" },
+  ];
+
+  // ============ NAVIGATION ============
+  function goToScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    if (name === 'dashboard') renderKanban();
+    window.scrollTo(0, 0);
+  }
+  function resetToStart() { goToScreen('welcome'); }
+
+  // ============ SCAN ANIMATION ============
+  function startScan() {
+    const bar = document.getElementById('scanBar');
+    const status = document.getElementById('scanStatus');
+    const messages = [
+      "Connecting to Gmail…",
+      "Found 247 recent emails. Filtering…",
+      "Detecting application confirmations…",
+      "Reading recruiter messages…",
+      "Checking calendar for interview invites…",
+      "Sorting into stages…",
+      "Almost done…",
+    ];
+    let pct = 0;
+    let msgIdx = 0;
+    bar.style.width = '0%';
+    status.textContent = messages[0];
+
+    const interval = setInterval(() => {
+      pct += Math.random() * 3 + 1;
+      if (pct >= 100) {
+        pct = 100;
+        bar.style.width = '100%';
+        status.textContent = 'Found 14 applications across 6 stages.';
+        clearInterval(interval);
+        setTimeout(() => goToScreen('dashboard'), 700);
+        return;
+      }
+      bar.style.width = pct + '%';
+      const targetMsg = Math.floor((pct / 100) * messages.length);
+      if (targetMsg !== msgIdx && targetMsg < messages.length) {
+        msgIdx = targetMsg;
+        status.textContent = messages[msgIdx];
+      }
+    }, 80);
+  }
+
+  // ============ KANBAN ============
+  let currentSearch = '';
+  function renderKanban() {
+    const kanban = document.getElementById('kanban');
+    const term = currentSearch.toLowerCase();
+    const filtered = jobs.filter(j =>
+      !term ||
+      j.co.toLowerCase().includes(term) ||
+      j.role.toLowerCase().includes(term) ||
+      j.subj.toLowerCase().includes(term)
+    );
+
+    if (filtered.length === 0) {
+      kanban.innerHTML = `<div class="no-results"><h3>No matches</h3><p>Try a different search term.</p></div>`;
+      return;
+    }
+
+    kanban.innerHTML = COL_DEFS.map(col => {
+      const colJobs = filtered.filter(col.filter);
+      return `
+        <div class="col ${col.id}">
+          <div class="col-header">
+            <span>${col.label}</span>
+            <span class="count">${colJobs.length}</span>
+          </div>
+          <div class="col-body">
+            ${colJobs.length === 0
+              ? '<div class="empty-col">Empty</div>'
+              : colJobs.map(j => `
+                <button class="job-card" onclick="openModal(${j.id})">
+                  <div class="co">${j.co}</div>
+                  <div class="role">${j.role}</div>
+                  <div class="subj">${j.subj}</div>
+                  <div class="time">${j.time}</div>
+                </button>
+              `).join('')
+            }
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Summary
+    document.getElementById('totalCount').textContent = jobs.length;
+    const active = jobs.filter(j => !['Offer','Rejected','Withdrawn','Ghosted'].includes(j.status)).length;
+    document.getElementById('activeCount').textContent = active;
+    document.getElementById('weekCount').textContent = jobs.filter(j => /day|hour/.test(j.time) && !j.time.includes('week')).length;
+  }
+  function filterJobs() {
+    currentSearch = document.getElementById('searchBox').value;
+    renderKanban();
+  }
+
+  // ============ MODAL ============
+  function openModal(jobId) {
+    const j = jobs.find(x => x.id === jobId);
+    if (!j) return;
+    document.getElementById('m-company').textContent = j.co;
+    document.getElementById('m-role').textContent = j.role;
+    const pill = document.getElementById('m-status');
+    pill.textContent = STATUS_PRETTY[j.status];
+    pill.className = 'status-pill status-' + j.status;
+    document.getElementById('m-time').textContent = 'Last activity: ' + j.time;
+    document.getElementById('m-from').textContent = 'From: ' + j.recruiter + (j.email ? ', ' + j.co : '');
+    document.getElementById('m-body').textContent = '"' + j.body + '"';
+    document.getElementById('m-applied').textContent = j.appliedOn;
+    document.getElementById('m-source').textContent = j.source;
+    document.getElementById('m-recruiter').textContent = j.recruiter;
+    document.getElementById('m-email').textContent = j.email;
+    document.getElementById('m-jd').textContent = j.jd;
+    document.getElementById('modal').classList.add('active');
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+  }
+  // Esc key closes modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.getElementById('drawer').classList.remove('active');
+      document.getElementById('drawerBack').classList.remove('active');
+    }
+  });
+
+  // ============ DRAWER ============
+  function toggleDrawer() {
+    document.getElementById('drawer').classList.toggle('active');
+    document.getElementById('drawerBack').classList.toggle('active');
+  }
+</script>
+</body>
+</html>
