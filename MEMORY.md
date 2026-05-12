@@ -232,6 +232,98 @@
 
 ---
 
+## May 12, 2026 — Week 1 toolchain decisions locked
+
+**What was decided:**
+- **Build tool:** Vite
+- **Testing framework:** Vitest — installed in week 1, no tests written this week
+- **State management:** React's built-in hooks only (`useState`, `useReducer`, `useContext`)
+- **UUID generation:** `crypto.randomUUID()` (built into Chrome)
+- **Date handling:** Built-in `Date` + `Intl.DateTimeFormat` for week 1; revisit if week 6 ghosted-timer math gets gnarly
+- **Vite multi-entry approach for MV3:** Use `vite-plugin-web-extension` rather than hand-rolling the multi-entry config
+
+**Why:**
+- All five primary choices follow the spec's default rule: prefer built-in, skip the dependency
+- Vitest pairs natively with Vite, so wiring it now is near-zero cost and pays off when classifier logic appears in week 3
+- State is small (jobs list, modal, search input) — hooks are sufficient and avoid adding a library the user would later need to understand
+- `crypto.randomUUID()` is native in modern Chrome; an external `uuid` package adds bytes for no gain
+- Week 1 has no real date math; built-ins handle formatting and basic comparisons fine
+- For Vite + MV3: `vite-plugin-web-extension` handles the known gotchas (MV3 service worker bundling, asset paths, manifest generation). It's a build-time-only dependency that never ships to end users, so "skip the dependency" applies less strongly here than for runtime libraries
+
+**What was rejected:**
+- Webpack and Parcel for build tool — heavier or less common for extensions
+- Jest for testing — more friction when paired with Vite
+- Skipping tests entirely for v1 — defensible but creates rework risk later
+- Zustand and Redux for state — overkill for the size of state JobTrail has
+- `uuid` npm package — Chrome already does this natively
+- `date-fns` and `dayjs` — premature; only revisit if week 6 needs them
+- Hand-rolled Vite multi-entry config for MV3 — more local config to maintain when a community plugin already solves the MV3-specific pain points
+
+**Revisit trigger:** If `vite-plugin-web-extension` proves unmaintained or buggy, fall back to a hand-rolled multi-entry config. If week 6 date math (ghosted timer, status transitions) gets gnarly, reconsider `date-fns`.
+
+---
+
+## May 12, 2026 — Tailwind v4 chosen; spec section 3 file tree drifts
+
+**What was decided:**
+- Use Tailwind v4 for the JobTrail extension build (`tailwindcss` + `@tailwindcss/vite`)
+- The repo therefore does **not** contain `tailwind.config.js` or `postcss.config.js` — both files referenced in spec section 3 are unused in Tailwind v4
+- Design tokens (coral, navy, cream) live in `src/styles/tokens.css` via `@theme`, replacing what those config files would have held in v3
+- Spec section 3 file tree to be edited to drop the two filenames on the next spec touch — not blocking week 1 build
+
+**Why:**
+- Tailwind v4 (released Jan 2025) is the mainstream default by May 2026; v3 is legacy
+- v4's CSS-first config is simpler (one Vite plugin instead of plugin + two config files)
+- Fewer files for a non-code-reading project owner to later understand or maintain
+- The locked decision in the context doc is "use Tailwind" — v3 vs v4 was an implementation choice, surfaced and approved partway through Task 1
+
+**What was rejected:**
+- Tailwind v3 to match spec section 3 verbatim — would keep two extra config files for no working benefit; legacy setup
+
+**Spec drift to fix later:** Remove these two lines from `JobTrail-Build-Spec.md` section 3 file tree:
+- `├── tailwind.config.js`
+- `├── postcss.config.js`
+
+No urgency. Section 3 is a reference doc, not a build artifact. Fix on the next spec update.
+
+---
+
+## May 12, 2026 — Session summary: week 1 tasks 1–2
+
+**Worked on:**
+- JobTrail-Week1-Kickoff.md tasks 1 and 2 (project scaffold, manifest, load unpacked)
+- The three pre-work context documents (project context, build spec, kickoff) read in order before any code
+
+**Completed:**
+- **Task 1 — Project scaffold.** Folder structure per spec section 3, npm dependencies (React 19, Vite, Tailwind v4, Vitest, vite-plugin-web-extension), placeholder source files for popup/dashboard/onboarding, empty service worker, README stub. `npm run build` produces a working `dist/`.
+- **Task 2 — Manifest V3 + load unpacked.** Extension loaded successfully via `chrome://extensions` → Load unpacked → `dist/`. Popup opens and displays placeholder text without errors.
+- **Extension ID captured:** `nkiejbmfhfellaikbjjkfjkafnbhfpnf` — needed for OAuth Client ID creation in next session.
+
+**In progress / not yet done:**
+- Task 3 (manual, by user, in next session): create OAuth 2.0 Client ID in Google Cloud Console using the captured extension ID; paste into `manifest.json` under a fresh `oauth2` block
+- Tasks 4–6 (rest of week 1): OAuth flow via `chrome.identity`, token persistence + sign-out, README polish + commit hygiene
+
+**Decisions made today:**
+- Five toolchain choices locked: Vite, Vitest (installed, no tests yet), React hooks only, `crypto.randomUUID()`, built-in dates
+- Vite multi-entry approach: `vite-plugin-web-extension` over hand-rolled config (build-time plugin handles MV3 gotchas; doesn't ship to users)
+- Tailwind v4 over v3 (separate entry above)
+- The `oauth2` block must **not** exist in `manifest.json` until a real Client ID is available — verified that Chrome rejects an empty `client_id`. Both build spec section 4 and kickoff Task 2 watch-out were updated to reflect this.
+
+**Spec / doc updates this session:**
+- `JobTrail-Build-Spec.md` section 4: oauth2 block removed from main JSON example; new warning sub-section added with the eventual oauth2 shape and the empty-client_id gotcha
+- `JobTrail-Week1-Kickoff.md` Task 2 watch-out: corrected guidance — "do not add the oauth2 block yet"
+- `MEMORY.md`: three new entries (toolchain decisions, Tailwind v4 deviation, this summary)
+- Spec section 3 file tree deviation noted in MEMORY.md but not yet applied in the spec file itself
+
+**Next session — start here:**
+1. Open `MEMORY.md`, scan the entries below "Open watchpoints" and the last three dated entries
+2. Hand the extension ID `nkiejbmfhfellaikbjjkfjkafnbhfpnf` to Google Cloud Console — project `jobtrail-496006` → APIs & Services → Credentials → Create OAuth 2.0 Client ID → type "Chrome Extension" → paste extension ID
+3. Add the real `oauth2` block to `manifest.json` per build spec section 4
+4. Rebuild and verify the JobTrail card in `chrome://extensions` shows no warnings
+5. Begin Task 4: OAuth flow with `chrome.identity`
+
+---
+
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5

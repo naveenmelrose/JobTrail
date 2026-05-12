@@ -1,0 +1,26 @@
+{
+  "name": "jobtrail",
+  "version": "0.1.0",
+  "description": "Auto-track your job applications from Gmail.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "^4.3.0",
+    "vite": "^8.0.12",
+    "vite-plugin-web-extension": "^4.5.1",
+    "vitest": "^4.1.6"
+  }
+}

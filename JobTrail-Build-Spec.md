@@ -115,15 +115,20 @@ Key fields (illustrative — Claude Code should generate the actual file):
     "https://gmail.googleapis.com/*",
     "https://generativelanguage.googleapis.com/*"
   ],
-  "oauth2": {
-    "client_id": "[FILLED IN AT BUILD TIME]",
-    "scopes": [
-      "https://www.googleapis.com/auth/gmail.readonly",
-      "https://www.googleapis.com/auth/userinfo.email"
-    ]
-  },
   "background": { "service_worker": "background/service-worker.js" },
   "action": { "default_popup": "popup/index.html" }
+}
+```
+
+**OAuth2 block — add only when a real Client ID exists.** Chrome rejects manifests with an empty `oauth2.client_id` (verified May 12, 2026 — `chrome://extensions` refuses to load the unpacked extension with "Invalid value for 'oauth2.client_id'"). Do not pre-populate this block with `""` or a placeholder string. Add it during Task 3 of week 1, once Google Cloud Console has generated the real Client ID:
+
+```json
+"oauth2": {
+  "client_id": "<real-client-id>.apps.googleusercontent.com",
+  "scopes": [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ]
 }
 ```
 
