@@ -324,6 +324,48 @@ No urgency. Section 3 is a reference doc, not a build artifact. Fix on the next 
 
 ---
 
+## May 12, 2026 — Session summary: week 1 tasks 3–6
+
+**Worked on:**
+- JobTrail-Week1-Kickoff.md Tasks 3 (OAuth Client ID setup), 4 (OAuth sign-in flow), 5 (token persistence + sign-out), and 6 (README + commit hygiene)
+- MEMORY.md re-read at the start of each task; targeted re-reads of build spec sections 4 and 5 (for Task 4) and kickoff Task 5 (for Task 5)
+
+**Completed:**
+- **Task 3 — OAuth Client ID.** Created in Google Cloud Console (project `jobtrail-496006`), Application Type "Chrome Extension", paired to extension ID `nkiejbmfhfellaikbjjkfjkafnbhfpnf`. Client ID populated into `manifest.json` under a fresh `oauth2` block.
+- **Task 4 — OAuth sign-in flow.** `src/popup/popup.jsx` rewritten to call `chrome.identity.getAuthToken({ interactive: true })`, fetch userinfo from `https://www.googleapis.com/oauth2/v2/userinfo` with a Bearer token, store the access token in `chrome.storage.local` under key `jobtrail.token`, and display the signed-in email.
+- **Task 5 — Token persistence + sign-out.** Added `useEffect` mount-time verification, a `clearStoredToken` helper, sign-out handler, and three new visual states (`checking`, `signed-in` with sign-out link, `network-error` with retry + sign-out escape). 401 from userinfo clears storage and falls back to signed-out with explanation; other network/server errors show retry without clearing the token.
+- **Task 6 — README + commit hygiene.** README rewritten with prerequisites (Node 20+, Chrome, OAuth Client ID), install steps, npm scripts, load-unpacked instructions, project structure, and license. Three forward commits applied to the repo in conventional-commit format (`feat:` / `docs:`).
+
+**In progress / not yet done:**
+- Week 2 work begins next session: Gmail fetch via `src/lib/gmail.js`, raw email list display in a stub dashboard
+- OAuth verification submission to Google still deferred (kickoff says week 8 or later — testing mode is fine for now)
+- Real icons still deferred (kickoff says week 8)
+
+**Decisions made today:**
+- **Task 5 — 401-only token cleanup.** On mount-time userinfo failure, only HTTP 401 triggers automatic token cleanup. Other 4xx/5xx responses and network errors route to a `network-error` state with a retry button and the token preserved. Reason: 401 is the specific signal that the token is rejected; other errors are likely transient and clearing the token would force re-sign-in for a network blip.
+- **Task 5 — `network-error` retry preserves the token.** Retry re-reads from `chrome.storage.local` so storage stays the source of truth; a sign-out escape hatch is shown alongside retry for users who want to manually reset. The token is never cleared on transient failure.
+- **Task 5 — `checking` initial state with "Loading…" UI.** Added explicitly so the popup doesn't flash wrong-state UI before the mount-time storage read resolves. Not in the kickoff brief but worth the small addition.
+- **Task 6 — Commit reorganization Path B (forward-only, no force-push).** `ad972a5` was already pushed to GitHub, so rewriting it would have required force-push. Picked the additive path: leave `ad972a5` alone as a one-time pre-hygiene combo, apply conventional-commit format from Task 3 onward. Tasks 4 and 5 were combined into a single commit honestly because no intermediate commit existed on disk — the Task 4 `popup.jsx` was overwritten when Task 5 was implemented.
+- **Commit-as-you-go rule going forward.** Commit each task after verification, before moving to the next. Prevents the Tasks 4/5 entanglement from recurring and keeps the log atomic.
+
+**Spec / doc updates this session:**
+- `manifest.json` — `oauth2` block added with real Client ID (committed as `e7a53f6`)
+- `src/popup/popup.jsx` — full sign-in flow + persistence + sign-out (committed as `7159228`)
+- `README.md` — expanded from week-1 stub to contributor-oriented README (committed as `3dd94cf`)
+- `MEMORY.md` — this entry
+- `JobTrail-Build-Spec.md` section 3 file tree — about to be edited in this same session to drop `tailwind.config.js` and `postcss.config.js` (Tailwind v4 deviation logged on May 12 earlier; this applies the change to the spec itself)
+
+**Spec drift not yet applied at time of writing:** none after the section 3 edit lands in this same session.
+
+**Next session — start here:**
+1. Open `MEMORY.md` and scan the most recent dated entries plus "Open watchpoints"
+2. Re-read `JobTrail-Build-Spec.md` section 11 (Scan behavior) for the Gmail fetch shape
+3. Skim `JobTrail-Build-Spec.md` section 6 (Gemini integration) for context — not used in week 2, but informs how the classifier will plug in later
+4. Begin week 2: implement `src/lib/gmail.js`, fetch the last 30 days of Primary-tab emails using `newer_than:30d -in:chats category:primary`, and display the raw list in a stub Dashboard page
+5. Commit-as-you-go: each verified milestone gets its own commit before moving on
+
+---
+
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5
