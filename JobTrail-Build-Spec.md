@@ -55,8 +55,6 @@ JobTrail/
 ├── manifest.json              # Chrome extension manifest (V3)
 ├── package.json               # npm dependencies + build scripts
 ├── vite.config.js             # build tool config [VERIFY: Vite vs other]
-├── tailwind.config.js
-├── postcss.config.js
 ├── README.md
 ├── LICENSE                    # MIT
 ├── .gitignore
