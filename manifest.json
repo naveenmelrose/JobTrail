@@ -16,5 +16,12 @@
   "action": {
     "default_popup": "src/popup/index.html",
     "default_title": "JobTrail"
+  },
+  "oauth2": {
+    "client_id": "817132928446-le29oo2fi7binacuivkfiv5l3a00ksa6.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/userinfo.email"
+    ]
   }
 }
