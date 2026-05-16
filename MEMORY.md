@@ -365,6 +365,30 @@ No urgency. Section 3 is a reference doc, not a build artifact. Fix on the next 
 5. Commit-as-you-go: each verified milestone gets its own commit before moving on
 
 ---
+## May 16, 2026 — Week 2 architecture decisions locked
+
+**What was decided:**
+1. **Render surface:** Dashboard tab. Popup becomes a launcher (sign-in/out + "Open JobTrail" button via `chrome.tabs.create`); email list renders in `dashboard/index.html`.
+2. **Fetch location:** Dashboard page directly. Token read from `chrome.storage.local`, fetch on mount. No service worker / message passing in week 2.
+3. **Data depth:** Sender + subject + date + Gmail snippet. No full message bodies, no classification.
+4. **Fetch strategy:** Sequential `messages.get` calls. No batch requests in week 2.
+
+**Why:**
+- Dashboard tab is the final architecture (Kanban lives there from week 5); building a popup list then ripping it out is wasted work.
+- Fetch-in-page is the simplest place to get the fetch working; central coordination isn't needed until re-scan + state machine arrive.
+- Snippets come free in the metadata fetch; full bodies aren't needed until week 3 classification.
+- Sequential is simple and stays well under Gmail quota; a typical 30-day Primary inbox is 200–400 emails (~8–15s load), acceptable for now.
+
+**What was rejected:**
+- Email list in popup — too cramped, closes on click-away.
+- Fetch in service worker — premature plumbing for week 2.
+- Full message bodies in week 2 — kilobytes per email for data not yet used.
+- Batch requests in week 2 — more code before typical volumes are known.
+
+**Deferred:**
+- Move fetch to service worker — revisit week 6 (re-scan + state machine need a coordinator).
+- Gmail batch requests (up to 100 calls/request, ~5x faster perceived load) — revisit week 6.
+
 
 ## Open watchpoints (not yet decisions, things to track)
 
