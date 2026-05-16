@@ -390,6 +390,32 @@ No urgency. Section 3 is a reference doc, not a build artifact. Fix on the next 
 - Gmail batch requests (up to 100 calls/request, ~5x faster perceived load) — revisit week 6.
 
 
+---
+
+## May 16, 2026 — Week 2 task 3 fetch measurements (dev inbox)
+
+**Numbers (single dev inbox, naveenmelrose@outlook.com signed-in account):**
+- Primary-tab emails in last 30 days: **150**
+- Sequential `messages.get` wall-clock: **~30 seconds** (~0.2s per email, rough — measure more precisely on next run)
+- Pagination: **confirmed working against real data** — 150 > 100 means `nextPageToken` was exercised across two pages of `messages.list`
+- Final dashboard render: clean, no console errors, count logged
+
+**Why this matters for week 6 batch decision:**
+- Sequential at ~0.2s/email scales linearly: 400-email Primary inbox = 80s wall-clock, 500-email cap = 100s
+- "Heavy but realistic" users (job seekers with newsletters + alerts in Primary) will hit 1.5–2 minute load times — past the threshold where users assume the page is broken
+- The "5–15 second" estimate the May 16 decision used (typical 200–400-email Primary inbox at batched speed) is fine for batch but not for sequential
+
+**Position change:**
+- Original May 16 framing: batch requests are "deferred, revisit week 6"
+- Updated framing (May 16, post-task-3): **Gmail batch requests are likely necessary at week 6, not optional.** Sequential is acceptable for week 2 dev use but unacceptable as the production scan path for any inbox larger than the dev measurement.
+- Service-worker move is still a separate question (coordinator role for re-scan + state machine) — independently decided in week 6.
+
+**Action at week 6:**
+- Default plan: implement Gmail batch fetching as the initial-scan path. Sequential remains as fallback only.
+- Re-measure on at least one heavier inbox before committing to the design.
+
+---
+
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5
