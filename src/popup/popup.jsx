@@ -5,6 +5,11 @@ import './popup.css';
 
 const TOKEN_STORAGE_KEY = 'jobtrail.token';
 const USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
+const DASHBOARD_PATH = 'src/dashboard/index.html';
+
+function openDashboard() {
+  chrome.tabs.create({ url: chrome.runtime.getURL(DASHBOARD_PATH) });
+}
 
 function getAuthToken() {
   return new Promise((resolve, reject) => {
@@ -145,8 +150,15 @@ function Popup() {
         <p className="text-sm font-medium mt-1 break-all">{email}</p>
         <button
           type="button"
+          onClick={openDashboard}
+          className="mt-4 px-4 py-2 rounded bg-coral text-white font-medium"
+        >
+          Open JobTrail
+        </button>
+        <button
+          type="button"
           onClick={handleSignOut}
-          className="mt-4 text-sm underline text-navy"
+          className="mt-4 ml-3 text-sm underline text-navy"
         >
           Sign out
         </button>
