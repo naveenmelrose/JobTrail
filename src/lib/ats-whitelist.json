@@ -1,0 +1,26 @@
+{
+  "_note_linkedin_excluded": "linkedin.com is intentionally omitted from this whitelist. Spec section 7 flags it as 'needs sub-filtering' — a raw linkedin.com match would pull in job alerts, digests, and InMail which are explicitly NOT job applications. LinkedIn handling waits for Gemini in week 4.",
+  "_note_shape": "Top-level object (not a bare array) so the linkedin exclusion note can live alongside the data. Classifier reads `entries`. Each entry: { name, domains[] }. Matching is suffix on dot boundary, so subdomains of a listed domain match automatically.",
+  "entries": [
+    { "name": "Greenhouse",            "domains": ["greenhouse.io", "greenhouse-mail.io"] },
+    { "name": "Lever",                 "domains": ["lever.co", "hire.lever.co"] },
+    { "name": "Ashby",                 "domains": ["ashbyhq.com"] },
+    { "name": "Workday",               "domains": ["workday.com", "myworkday.com"] },
+    { "name": "SmartRecruiters",       "domains": ["smartrecruiters.com"] },
+    { "name": "Jobvite",               "domains": ["jobvite.com"] },
+    { "name": "iCIMS",                 "domains": ["icims.com"] },
+    { "name": "BambooHR",              "domains": ["bamboohr.com"] },
+    { "name": "Workable",              "domains": ["workable.com"] },
+    { "name": "Breezy",                "domains": ["breezy.hr"] },
+    { "name": "Recruitee",             "domains": ["recruitee.com"] },
+    { "name": "Teamtailor",            "domains": ["teamtailor.com"] },
+    { "name": "SuccessFactors",        "domains": ["successfactors.com"] },
+    { "name": "Taleo",                 "domains": ["taleo.net"] },
+    { "name": "Indeed",                "domains": ["indeed.com"] },
+    { "name": "Glassdoor",             "domains": ["glassdoor.com"] },
+    { "name": "Wellfound",             "domains": ["wellfound.com"] },
+    { "name": "Otta",                  "domains": ["otta.com"] },
+    { "name": "Welcome to the Jungle", "domains": ["welcometothejungle.com"] },
+    { "name": "Y Combinator",          "domains": ["ycombinator.com"] }
+  ]
+}
