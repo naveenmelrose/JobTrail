@@ -416,6 +416,110 @@ No urgency. Section 3 is a reference doc, not a build artifact. Fix on the next 
 
 ---
 
+Session Summary — May 16, 2026
+Worked on: Week 2 — Gmail fetch + raw email list in stub dashboard. All five kickoff tasks.
+Completed:
+
+Task 1 — Popup launcher. "Open JobTrail" button added to signed-in popup state; opens dashboard tab via chrome.tabs.create + chrome.runtime.getURL. Week 1 auth states preserved.
+Task 2 — src/lib/gmail.js. Pure-logic module: getToken, listMessages (paginates via nextPageToken up to 500 cap), getMessageMetadata (pulls From/Subject/Date by header name, returns normalized object incl. snippet). GmailApiError class with .status field — HTTP code on HTTP failures, null on network/parse failures.
+Task 3 — Dashboard raw list. Dashboard.jsx fetches on mount, sequential messages.get, progress indicator ("Loading X of N…"), renders From/Subject/Date/Snippet table, newest first.
+Task 4 — Error handling. Distinct states for no-token ("not signed in"), 401 ("session expired", no retry), 403 (quota message), network ("couldn't reach Gmail" + working Retry button).
+Verification: All four error scenarios passed in Chrome. Scenario 3 verified against a real internet drop mid-scan. 403 code-reviewed only (structurally identical to 401 branch).
+Commits: Five week 2 commits (three feat:, two docs:), all atomic, pushed to origin/main. Newest: 13dfd76.
+
+In progress: None — week 2 fully closed.
+Decisions made:
+
+Week 2 architecture (4 decisions, locked May 16): dashboard-tab render surface, in-page fetch, metadata-only depth, sequential gets. (Logged in separate May 16 entry.)
+Token-missing vs 401 — keep distinct, do NOT collapse. A missing token (never signed in / signed out) and a server-rejected 401 (token expired) are different situations and get different messages: "not signed in — open the popup to sign in" vs "session expired — sign in again." Rejected collapsing both into a synthesized GmailApiError{status:401} — manufacturing a fake 401 for a non-network condition is a category error and contradicts the brief (Task 3 handles missing-token on mount; Task 4 handles real 401 separately). getToken() returning null is checked before any fetch; the real Gmail 401 is caught from the fetch.
+Batch-vs-sequential position shift (week 6): Task 3 measured ~30s for 150 emails (~0.2s/email). Linear scaling → 400-email inbox ≈ 80s, 500-cap ≈ 100s — past the "page looks broken" threshold. Position moved from "defer / revisit" to Gmail batch requests likely necessary at week 6, not optional. (Logged with the measurement entry.)
+
+Measurement (dev inbox): 150 Primary-tab emails / 30 days. Sequential fetch ~30s. Pagination confirmed against real data (150 > 100 → nextPageToken exercised).
+Next session — start here:
+
+Read JobTrail-Project-Context.md, then MEMORY.md (this entry + the two other May 16 entries + Open watchpoints).
+Re-upload the current MEMORY.md to project knowledge — it was edited locally + by Claude Code this week; the project-knowledge copy is stale.
+Week 3 = whitelist classification. Re-read JobTrail-Build-Spec.md section 7 (classification logic, ATS whitelist) and section 8 (data model — week 3 starts persisting jobtrail.jobs to storage).
+Week 3 will need a format=full body-fetch path added to gmail.js — week 2 deliberately fetched metadata only. Not a surprise; flagged here.
+Draft JobTrail-Week3-Kickoff.md before Claude Code starts.
+
+## May 17, 2026 — Week 3 scope decisions locked
+
+**What was decided:**
+1. **What "classified" means in week 3:** Whitelist match only. A whitelisted
+   sender domain = a job. Status is hardcoded to `Applied` for every week-3 job.
+   Real status detection waits for the state machine in week 6.
+2. **Data depth:** Metadata only (sender / subject / date / snippet). No
+   `format=full` body fetch in week 3 — whitelist classifies on sender domain
+   alone. Body fetch moves to week 4 where Gemini consumes body text.
+3. **Thread grouping:** In scope for week 3. Matched emails collapse to jobs by
+   `threadId`. One thread = one job (spec section 8).
+4. **Whitelist storage:** A JSON data file (`src/lib/ats-whitelist.json`),
+   loaded by `classifier.js`. Growing the list never requires a code change.
+
+**Why:**
+- Status detection is explicitly week 6 work; guessing status from subject
+  keywords in week 3 builds throwaway logic that the real state machine replaces.
+- Whitelist classification needs only the `From` header — full bodies would be
+  kilobytes of unused data until Gemini arrives in week 4.
+- The data model is keyed on threads; collapsing messages now avoids reworking
+  the jobs array later.
+- Spec section 7 explicitly says treat the whitelist as data, not code.
+
+**What was rejected:**
+- Match + naive subject-keyword status guessing — throwaway logic, reworked in
+  week 6.
+- Adding the `format=full` body-fetch path in week 3 — code sitting unused for a
+  week; belongs with Gemini in week 4.
+
+**Planning-note correction:** The May 16 "next session" note said week 3 would
+need a `format=full` body-fetch path added to `gmail.js`. That assumption was
+wrong — whitelist-only classification uses only the `From` header. Body fetch is
+a week-4 task. No locked decision is contradicted; only a forward-planning note
+is corrected.
+
+**Field-population boundary:** Week 3 populates only fields derivable from
+metadata + the whitelist match (`threadId`, `appliedAt`, `lastActivityAt`,
+`latestEmail.*`, `recruiter.email`, `source`, `id`, the constant flags). It does
+NOT populate `company`, `role`, `recruiter.name`, `jobDescription` (week 4
+Gemini) or `statusUpdatedAt` (week 6). No guessing company/role from the domain.
+
+---
+
+## May 17, 2026 — OAuth verification: cannot submit yet, blockers identified
+
+**What was decided:** Do not attempt full OAuth verification submission now.
+Clear the non-video blockers this week (privacy policy + homepage); submit when
+the demo video is recordable, realistically week 5–6.
+
+**Why:**
+- The original "submit in week 1" watchpoint assumed verification is a
+  paperwork-only task. It is not. Google requires a demo video showing the
+  `gmail.readonly` scope being used in a functioning app — impossible until the
+  dashboard renders real classified data (week 5+).
+- Three hard blockers: (a) homepage URL must be live + reachable, (b) privacy
+  policy URL must be live + reachable, (c) demo video must show the scope in use.
+- (a) and (b) are pure writing/hosting tasks with no dependency on build
+  progress — worth doing now so submission is a 1-day task later.
+- (c) genuinely gates on a working app; deferring it is unavoidable, not a slip.
+
+**Action plan:**
+- Privacy policy: drafted in chat (May 17). Must honestly state read-only Gmail
+  access, data stays in `chrome.storage.local`, BYO Gemini key, no developer
+  servers, no telemetry.
+- Homepage: single static page on GitHub Pages (free, no domain purchase). Hosts
+  what JobTrail is + link to the privacy policy.
+- Logo: placeholder coral inbox icon — verify submission-readiness at week 5.
+- Demo video: record at week 5–6 once the dashboard shows real data.
+
+**What was rejected:**
+- Submit now anyway — incomplete submissions get bounced; wastes a review cycle.
+- Defer everything to week 5 — leaves privacy policy + homepage on the critical
+  path for no reason.
+
+**Watchpoint update:** The "submit early in week 1" item under Open watchpoints
+is now corrected — realistic submit window is week 5–6, gated on the demo video.
+
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5
