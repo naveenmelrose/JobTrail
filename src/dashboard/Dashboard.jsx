@@ -2,9 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../styles/tokens.css';
 import { getToken, listMessages, getMessageMetadata } from '../lib/gmail.js';
+import { classifyEmail, buildJobsFromEmails } from '../lib/classifier.js';
+import { getJobs, saveJobs } from '../lib/storage.js';
 
 const SCAN_QUERY = 'newer_than:30d -in:chats category:primary';
 const SCAN_CAP = 500;
+const SCAN_WINDOW_DAYS = 30;
+
+const COLUMNS = [
+  'Applied',
+  'In Conversation',
+  'Interview Scheduled',
+  'Awaiting Outcome',
+  'Offer / Rejected',
+  'Ghosted',
+];
+
+const STATUS_TO_COLUMN = {
+  Applied: 'Applied',
+};
 
 function formatDate(raw) {
   if (!raw) return '';
@@ -13,62 +29,141 @@ function formatDate(raw) {
   return parsed.toLocaleString();
 }
 
+function JobCard({ job }) {
+  return (
+    <div className="border border-gray-200 rounded p-2 mb-2 bg-white text-sm">
+      <div className="font-medium text-navy">{job.source}</div>
+      <div className="text-gray-800 mt-1" title={job.latestEmail?.subject ?? ''}>
+        {job.latestEmail?.subject || '(no subject)'}
+      </div>
+      <div className="text-xs text-gray-500 mt-1 break-all">
+        {job.recruiter?.email ?? ''}
+      </div>
+      <div className="text-xs text-gray-500 mt-1">
+        {formatDate(job.lastActivityAt)}
+      </div>
+    </div>
+  );
+}
+
+function KanbanColumn({ title, jobs }) {
+  return (
+    <section className="bg-cream rounded p-2 min-h-[200px] flex flex-col">
+      <h2 className="text-sm font-semibold text-navy mb-2">
+        {title} <span className="text-gray-500 font-normal">({jobs.length})</span>
+      </h2>
+      <div className="flex-1">
+        {jobs.map((j) => <JobCard key={j.id} job={j} />)}
+      </div>
+    </section>
+  );
+}
+
+function Kanban({ jobs }) {
+  const byColumn = Object.fromEntries(COLUMNS.map((c) => [c, []]));
+  for (const job of jobs) {
+    const col = STATUS_TO_COLUMN[job.status];
+    if (col) byColumn[col].push(job);
+  }
+  return (
+    <div className="grid grid-cols-6 gap-3 mt-4">
+      {COLUMNS.map((title) => (
+        <KanbanColumn key={title} title={title} jobs={byColumn[title]} />
+      ))}
+    </div>
+  );
+}
+
+function ScanBanner({ scanStatus, progress }) {
+  if (scanStatus === 'listing') {
+    return <p className="text-sm mt-2 text-gray-600">Finding emails…</p>;
+  }
+  if (scanStatus === 'fetching') {
+    return (
+      <p className="text-sm mt-2 text-gray-600">
+        Loading {progress.current} of {progress.total}…
+      </p>
+    );
+  }
+  return null;
+}
+
 function Dashboard() {
-  const [status, setStatus] = useState('checking');
+  const [jobs, setJobs] = useState([]);
+  const [meta, setMeta] = useState({});
+  const [scanStatus, setScanStatus] = useState('init');
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const [rows, setRows] = useState([]);
   const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
-    runScan();
+    bootstrap();
   }, []);
 
+  async function bootstrap() {
+    const stored = await getJobs();
+    setJobs(stored.jobs);
+    setMeta(stored.meta);
+    runScan();
+  }
+
   async function runScan() {
-    setStatus('checking');
-    setRows([]);
-    setProgress({ current: 0, total: 0 });
     setErrorMessage(null);
 
     const token = await getToken();
     if (!token) {
-      setStatus('signed-out');
+      setScanStatus('signed-out');
       return;
     }
 
     try {
-      setStatus('listing');
+      setScanStatus('listing');
       const ids = await listMessages({ query: SCAN_QUERY, maxResults: SCAN_CAP });
 
-      setStatus('fetching');
+      setScanStatus('fetching');
       setProgress({ current: 0, total: ids.length });
 
       const fetched = [];
       for (let i = 0; i < ids.length; i++) {
-        const meta = await getMessageMetadata(ids[i].id);
-        fetched.push(meta);
+        const emailMeta = await getMessageMetadata(ids[i].id);
+        fetched.push(emailMeta);
         setProgress({ current: i + 1, total: ids.length });
       }
 
-      console.log(`[JobTrail] Fetched ${fetched.length} messages.`);
-      setRows(fetched);
-      setStatus('ready');
+      const matchedCount = fetched.filter((e) => classifyEmail(e).isJobApplication).length;
+      const newJobs = buildJobsFromEmails(fetched);
+
+      console.log(
+        `[JobTrail] Fetched ${fetched.length} emails, ${matchedCount} matched whitelist, ${newJobs.length} jobs created.`,
+      );
+
+      const newMeta = {
+        ...meta,
+        lastScanAt: new Date().toISOString(),
+        scanWindowDays: SCAN_WINDOW_DAYS,
+        apiKeyPresent: false,
+      };
+
+      await saveJobs({ jobs: newJobs, meta: newMeta });
+      setJobs(newJobs);
+      setMeta(newMeta);
+      setScanStatus('ready');
     } catch (err) {
       if (err?.status === 401) {
         console.warn('[JobTrail] Gmail rejected the token (401).', err);
-        setStatus('error-auth');
+        setScanStatus('error-auth');
       } else if (err?.status === 403) {
         console.error('[JobTrail] Gmail returned 403 (permission/quota).', err);
         setErrorMessage(err.message);
-        setStatus('error-quota');
+        setScanStatus('error-quota');
       } else {
         console.error('[JobTrail] Network or unknown error during scan.', err);
         setErrorMessage(err?.message ?? 'Unknown error');
-        setStatus('error-network');
+        setScanStatus('error-network');
       }
     }
   }
 
-  if (status === 'checking') {
+  if (scanStatus === 'init') {
     return (
       <main className="p-6">
         <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
@@ -77,7 +172,7 @@ function Dashboard() {
     );
   }
 
-  if (status === 'signed-out') {
+  if (scanStatus === 'signed-out') {
     return (
       <main className="p-6">
         <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
@@ -88,27 +183,7 @@ function Dashboard() {
     );
   }
 
-  if (status === 'listing') {
-    return (
-      <main className="p-6">
-        <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
-        <p className="text-sm mt-2">Finding emails…</p>
-      </main>
-    );
-  }
-
-  if (status === 'fetching') {
-    return (
-      <main className="p-6">
-        <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
-        <p className="text-sm mt-2">
-          Loading {progress.current} of {progress.total}…
-        </p>
-      </main>
-    );
-  }
-
-  if (status === 'error-auth') {
+  if (scanStatus === 'error-auth') {
     return (
       <main className="p-6">
         <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
@@ -119,7 +194,7 @@ function Dashboard() {
     );
   }
 
-  if (status === 'error-quota') {
+  if (scanStatus === 'error-quota') {
     return (
       <main className="p-6">
         <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
@@ -133,7 +208,7 @@ function Dashboard() {
     );
   }
 
-  if (status === 'error-network') {
+  if (scanStatus === 'error-network') {
     return (
       <main className="p-6">
         <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
@@ -155,27 +230,11 @@ function Dashboard() {
   return (
     <main className="p-6">
       <h1 className="text-2xl font-semibold text-navy">JobTrail Dashboard</h1>
-      <p className="text-sm mt-2">{rows.length} message{rows.length === 1 ? '' : 's'} fetched.</p>
-      <table className="mt-4 w-full border-collapse text-sm">
-        <thead>
-          <tr className="text-left border-b">
-            <th className="py-2 pr-4">From</th>
-            <th className="py-2 pr-4">Subject</th>
-            <th className="py-2 pr-4">Date</th>
-            <th className="py-2">Snippet</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id} className="border-b align-top">
-              <td className="py-2 pr-4 break-all">{row.from}</td>
-              <td className="py-2 pr-4">{row.subject}</td>
-              <td className="py-2 pr-4 whitespace-nowrap">{formatDate(row.date)}</td>
-              <td className="py-2 text-gray-600">{row.snippet}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <p className="text-sm mt-1 text-gray-600">
+        {jobs.length} job{jobs.length === 1 ? '' : 's'} tracked.
+      </p>
+      <ScanBanner scanStatus={scanStatus} progress={progress} />
+      <Kanban jobs={jobs} />
     </main>
   );
 }
