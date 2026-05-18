@@ -692,7 +692,7 @@ Next session — start here:
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5
-- **OAuth verification for `gmail.readonly`** — highest risk dependency in the project; submit early in week 1
+- **OAuth verification for `gmail.readonly`** — highest risk dependency; full submission gated on a demo video showing the scope in a working app, realistic window week 5–6. Privacy policy + homepage cleared May 17 as non-video blockers. See May 17 OAuth entry.
 - **Gemini prompt accuracy** — section 6 prompt is v0; needs 20+ real emails for testing in week 4. Confirmed May 18: dev inbox has zero real ATS application mail (owner not job hunting); corpus must be sourced externally before week 4 prompt iteration. See "Week 3 finding" entry.
 - **Initial scan UX for heavy users** — if free tier is exceeded, how do we explain "we'll keep scanning over 2-3 days" to users? Decide in week 4.
 - **Free tier viability for typical users** — week 4: measure actual LLM call volume on a real job seeker's 30-day inbox. If under 20 RPD, keep "free tier" framing in context doc. If over, update context doc per Option C honest framing.
