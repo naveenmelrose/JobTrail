@@ -520,11 +520,180 @@ the demo video is recordable, realistically week 5–6.
 **Watchpoint update:** The "submit early in week 1" item under Open watchpoints
 is now corrected — realistic submit window is week 5–6, gated on the demo video.
 
+---
+
+## May 18, 2026 — Week 3 finding: dev inbox cannot serve as classification corpus
+
+**What was found:** Live whitelist-classifier run against the dev inbox
+(naveenmelrose@outlook.com) returned 153 Primary-tab emails over the 30-day
+window. 13 of those matched the whitelist — but ALL 13 were the throwaway
+`TEMP-REVERT-BEFORE-COMMIT` skool.com entry temporarily added to exercise the
+pipeline against real fetched data. **Zero real ATS application emails matched.**
+
+**Why:** The dev inbox owner is not currently job hunting. The inbox contains no
+genuine job-application mail — no Greenhouse / Lever / Ashby / Workday
+confirmations, no recruiter replies, no calendar invites. The pipeline
+(fetch → classify → thread-group → persist → render) is verified working
+end-to-end; the inbox simply has nothing relevant to classify.
+
+**Consequence for week 4 (Gemini prompt iteration):**
+- Spec section 6 and the long-standing "Gemini prompt accuracy" watchpoint both
+  require ~20 real job-application emails to iterate the v0 prompt against.
+- The dev inbox cannot supply these. Real emails must be sourced from elsewhere
+  **before** week 4 prompt iteration starts, or week 4 is blocked.
+- Candidate sources: HR friends in the existing network, brother / wife if they
+  have recent application threads, anyone currently job hunting who'd share
+  redacted samples, or a public/anonymized recruiting-email dataset (verify
+  representativeness before relying on).
+- Privacy posture: any real emails used for prompt iteration should be reviewed
+  for sender/recipient identifying data before being stored anywhere. Default
+  workflow — tune the prompt against pasted samples in chat or local-only
+  scratch files, never commit real email content to the repo.
+
+**What was rejected:**
+- Treat dev inbox as a valid corpus and ship the v0 prompt untested — spec
+  section 6 explicitly says "needs at least 20 real emails tested against it
+  before it's trustworthy."
+- Defer corpus sourcing to week 4 itself — asking friends / family for samples
+  has social-latency; surfacing now lets sourcing run in parallel with the
+  remainder of week 3 / start of week 4.
+
+**Watchpoint update:** "Gemini prompt accuracy" line in Open watchpoints below is
+updated to flag the corpus-sourcing dependency.
+
+---
+
+Session Summary — May 17–18, 2026 (Week 3)
+
+Worked on: Week 3 kickoff brief — pipe the week-2 Gmail fetch through an
+ATS-whitelist classifier, group matched emails into jobs by thread, persist to
+`chrome.storage.local`, render a stub 6-column Kanban with every job in Applied.
+All five kickoff tasks completed.
+
+Completed:
+- **Task 1 — `src/lib/ats-whitelist.json`.** 20 ATS entries seeded from spec
+  section 7 (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Jobvite,
+  iCIMS, BambooHR, Workable, Breezy, Recruitee, Teamtailor, SuccessFactors,
+  Taleo, Indeed, Glassdoor, Wellfound, Otta, Welcome to the Jungle, Y
+  Combinator). Top-level object wrapping the entries array so a linkedin
+  exclusion note can live alongside the data. `linkedin.com` intentionally
+  omitted — spec flags it as needing sub-filtering; raw match would pull in
+  job alerts and digests that are explicitly NOT applications. LinkedIn
+  handling waits for Gemini in week 4. Also includes `greenhouse-mail.io` and
+  `hire.lever.co` as distinct entries (former is not a subdomain of
+  greenhouse.io, so subdomain matching wouldn't catch it).
+- **Task 2 — `src/lib/classifier.js`.** Pure-logic module, no React. Exports
+  `classifyEmail(email)` and `buildJobsFromEmails(emails)`. Defensive `From`
+  header parsing (angle-bracketed display-name form, bare address, malformed
+  input all handled as non-match, never crash). Case-insensitive matching.
+  **True suffix-on-dot-boundary semantics**: `greenhouse.io` matches
+  `jobs.greenhouse.io` and `a.b.greenhouse.io`; rejects `notgreenhouse.io` and
+  `greenhouse.io.evil.com`. Thread grouping by `threadId` produces one job per
+  thread, with `appliedAt` from earliest message and `lastActivityAt` /
+  `latestEmail` / `recruiter.email` from most recent. Fields owned by week 4
+  Gemini (`company`, `role`, `recruiter.name`, `jobDescription`) and week 6
+  state machine (`statusUpdatedAt`) deliberately stay `null` — no guessing
+  from domain or subject. Verified with 33 inline checks via temporary Node
+  script (deleted before commit).
+- **Task 3 — `src/lib/storage.js`.** Thin async wrapper over
+  `chrome.storage.local` under the single key `jobtrail.jobs`. `getJobs()`
+  returns the spec section 8 shape `{ jobs, meta }` with empty defaults on
+  fresh install so callers never have to nil-check. `saveJobs(data)` writes
+  the same shape. Defensive on both read and write — malformed stored values
+  coerce to the safe default rather than throwing. `jobtrail.token` and the
+  eventual `jobtrail.apikey` are separate keys; storage.js does not touch
+  them. Verified with 9 inline checks (round-trip, token-key isolation,
+  malformed-storage fallbacks).
+- **Task 4 — Dashboard rewrite.** On mount: `getJobs()` first for instant
+  paint, then the week-2 Gmail fetch unchanged, pipe through
+  `classifyEmail` + `buildJobsFromEmails`, `saveJobs` with rebuilt data, then
+  re-render. Raw email table replaced by a 6-column stub Kanban (Applied,
+  In Conversation, Interview Scheduled, Awaiting Outcome, Offer / Rejected,
+  Ghosted). Every job lands in Applied — status is hardcoded for week 3.
+  Other five columns render empty by design. Scan progress is shown as an
+  inline banner above the Kanban so stored jobs stay visible during a
+  re-scan, rather than disappearing behind a full-page "Loading…" takeover.
+  All week-2 error states intact (401 / 403 / network / no-token). One
+  console log per scan: `Fetched X emails, Y matched whitelist, Z jobs
+  created`.
+- **Task 5 — Commit hygiene + match-rate report + this MEMORY.md entry.**
+
+Commits (5 total for week 3, all conventional-commit format, atomic, on
+local `main`):
+- `b8d129f` feat: src/lib/ats-whitelist.json with 20 ATS entries
+- `545d079` feat: src/lib/classifier.js with whitelist match + thread grouping
+- `fcabc15` feat: src/lib/storage.js for jobtrail.jobs persistence
+- `298fca6` chore: gitignore feedback.md to keep private notes out of the repo
+- `f9d4492` feat: dashboard classifies, persists, renders stub 6-col Kanban
+
+Match-rate report (live dev inbox, captured via temporary `TEMP-REVERT-BEFORE-COMMIT`
+skool.com whitelist entry that was reverted before any commit):
+- **Fetched:** 153 Primary-tab emails over 30 days
+- **Matched whitelist:** 13 — all 13 were the temporary skool.com entry
+- **Jobs created:** 13
+- **Real ATS application matches: ZERO.** Honest result, not a pipeline failure
+  — the dev inbox contains no genuine job-application mail. See the
+  "Week 3 finding" entry above for the corpus-sourcing consequence on week 4.
+
+Decisions made this week (logged as their own dated entries above):
+- May 17 — Week 3 scope decisions locked: whitelist-match-only,
+  metadata-only, thread grouping in scope, whitelist as JSON.
+- May 17 — OAuth verification submission deferred to week 5–6 pending
+  recordable demo video; privacy policy + homepage cleared as non-video
+  blockers this week.
+- May 18 — Dev inbox cannot serve as Gemini prompt corpus; real emails must
+  be sourced externally before week 4.
+
+Process notes worth keeping:
+- Two test-scaffolding cycles ran cleanly without contaminating any commit:
+  (a) a mock `jobtrail.jobs` object pasted into DevTools to verify dashboard
+  render + instant-paint behaviour, and (b) a `TEMP-REVERT-BEFORE-COMMIT`
+  skool.com entry in the whitelist for live-pipeline verification. Both were
+  reverted before staging. `git diff` confirmed both files clean before commit.
+- One in-editor JSON edit corrupted the whitelist file end (duplicate closing
+  brackets) and broke `npm run build`. Caught immediately by the build, fixed
+  in one Edit, rebuilt clean. Small-data-file JSON edits are a known footgun
+  — a `node -e "require('./path/to.json')"` sanity check is cheap insurance.
+- A stretch of apparent "network errors" during Task 4 testing turned out to
+  be a stale DevTools "Offline" network-throttle setting carried over from an
+  earlier session — not a code bug, not unstable internet. Resetting throttle
+  to "No throttling" fixed it. Worth checking before assuming the worst.
+- The commit-as-you-go rule held: each task committed atomically after
+  verification, before the next task started.
+
+Spec / doc updates this session:
+- `.gitignore` — added `feedback.md` to keep private working notes out of the
+  repo (committed as `298fca6`).
+- `MEMORY.md` — three new entries: Week 3 scope decisions (May 17), OAuth
+  verification realism (May 17), Week 3 finding on dev-inbox corpus (May 18,
+  above), plus this session summary.
+- `JobTrail-Build-Spec.md` — no changes needed. Week 3 implementation matched
+  spec sections 7, 8, 14 verbatim — no drift.
+- `JobTrail-Week3-Kickoff.md` — created earlier this week (committed as
+  `d8fc2a3` before this session started).
+
+Next session — start here:
+1. Read `JobTrail-Project-Context.md`, then `MEMORY.md` (this entry, the
+   May 18 "Week 3 finding" entry, both May 17 entries, the three May 16
+   entries, and the Open watchpoints).
+2. **Source real job-application emails BEFORE writing week 4 code.** Target
+   ~20 real samples, varied senders (Greenhouse / Lever / Workday / direct
+   recruiter / LinkedIn message / etc.), varied stages (Applied,
+   InConversation, InterviewScheduled, Rejected). Without these, week 4
+   prompt iteration is blocked — see "Week 3 finding" entry.
+3. Re-read `JobTrail-Build-Spec.md` section 6 (Gemini integration) and the
+   LLM-fallback half of section 7.
+4. Revisit Tier 1 billing decision (deferred May 11) — see "Free tier
+   viability for typical users" watchpoint. Decide before paid-tier API
+   calls happen.
+5. Draft `JobTrail-Week4-Kickoff.md` once the corpus is in hand and the
+   billing decision is made.
+
 ## Open watchpoints (not yet decisions, things to track)
 
 - **HR friends / brother / wife feedback on mockup** — context doc section 9; if their feedback requires UI changes, sections 5 and 10 of the spec will need updating before week 5
 - **OAuth verification for `gmail.readonly`** — highest risk dependency in the project; submit early in week 1
-- **Gemini prompt accuracy** — section 6 prompt is v0; needs 20+ real emails for testing in week 4
+- **Gemini prompt accuracy** — section 6 prompt is v0; needs 20+ real emails for testing in week 4. Confirmed May 18: dev inbox has zero real ATS application mail (owner not job hunting); corpus must be sourced externally before week 4 prompt iteration. See "Week 3 finding" entry.
 - **Initial scan UX for heavy users** — if free tier is exceeded, how do we explain "we'll keep scanning over 2-3 days" to users? Decide in week 4.
 - **Free tier viability for typical users** — week 4: measure actual LLM call volume on a real job seeker's 30-day inbox. If under 20 RPD, keep "free tier" framing in context doc. If over, update context doc per Option C honest framing.
 - **BMaC link placement and copy** — defer final wording until v1 polish week 8. Default copy: "JobTrail is free and open source. If it saved you time, you can buy me a coffee." Verify BMaC URL is live before submitting to Chrome Web Store.
